@@ -53,7 +53,7 @@ class Openrouter:
             api_key=config.openrouter_api_key.get_secret_value(),
         )
         self.model = model
-        self.previous_posts = test_previous_posts
+        self.previous_posts = []
 
     async def __chat_complete(self, messages: List):
         completion = await self.client.chat.completions.create(

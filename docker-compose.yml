@@ -1,5 +1,5 @@
 services:
-  drive-sync:
+  bot:
     platform: linux/amd64
     build: .
     image: siegfriedschmidt/telegram-user-bot

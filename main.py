@@ -51,6 +51,7 @@ async def my_event_handler(event: NewMessage.Event):
             await client.forward_messages(admin, event.message)
             return
         else:
+            logger.info(f"Brief info: {brief_information}, meet_requirements: {meet_requirements}")
             if meet_requirements:
                 await client.forward_messages(neural_networks_channel, event.message)
                 await client.send_message(
