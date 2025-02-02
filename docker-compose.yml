@@ -1,0 +1,11 @@
+services:
+  drive-sync:
+    platform: linux/amd64
+    build: .
+    container_name: telegram-post-bot
+    environment:
+      - SECRET_FOLDER=/app/secret
+    volumes:
+      - ./secret:/app/secret
+
+    restart: "no"
