@@ -2,6 +2,7 @@ services:
   drive-sync:
     platform: linux/amd64
     build: .
+    image: siegfriedschmidt/telegram-user-bot
     container_name: telegram-post-bot
     environment:
       - SECRET_FOLDER=/app/secret
