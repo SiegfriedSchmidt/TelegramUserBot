@@ -30,7 +30,7 @@ async def notify(message: str, log=False):
 
 async def commands_handler(cmd: str):
     if cmd == '/help':
-        await notify("/help, /show, /stop, \logs")
+        await notify("/help, /show, /stop, /logs, /limits, /ask")
     elif cmd == '/show':
         await notify(f'''[{post_assistant.get_previous_posts_string()}]''')
     elif cmd == '/stop':
@@ -47,7 +47,7 @@ async def commands_handler(cmd: str):
                 "content": cmd[5:]
             }
         ]
-        result = await openrouter.chat_complete(messages)
+        result = await openrouter.chat_complete(messages, attempts=1)
         await notify(result if result else "Nothing.")
     else:
         await notify("Нифига не понимайт")
