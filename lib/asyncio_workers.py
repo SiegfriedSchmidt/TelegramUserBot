@@ -9,7 +9,8 @@ class AsyncioWorkers:
         self.workers = []
 
     async def start(self, num_workers=1):
-        self.workers = [asyncio.create_task(self.__worker(i)) for i in range(num_workers)]
+        if not self.workers:
+            self.workers = [asyncio.create_task(self.__worker(i)) for i in range(num_workers)]
 
     async def __worker(self, worker_id: int):
         while True:

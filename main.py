@@ -65,8 +65,9 @@ async def my_event_handler(event: NewMessage.Event):
 
         success, meet_requirements, brief_information = await post_assistant.check_channel_message(text)
         if not success:
-            await notify('Ошибочка вышла, и по ходу дела не очень хорошая. Проблема в этом посте')
-            await client.forward_messages(admin, event.message)
+            ...
+            # await notify('Ошибочка вышла, и по ходу дела не очень хорошая. Проблема в этом посте')
+            # await client.forward_messages(admin, event.message)
         else:
             logger.info(f"Brief info: {brief_information}, meet_requirements: {meet_requirements}")
             if meet_requirements:
@@ -86,6 +87,7 @@ async def join_channel(channel_id: str):
 
 
 async def main():
+    setup_signal_handlers()
     await asyncio_workers.start(num_workers=1)
     me = await client.get_me()
     await notify('Bot started.', log=True)
@@ -94,8 +96,9 @@ async def main():
 
 
 def terminate_by_signal():
-    logger.info("Program interrupted and terminated by signal")
+    logger.info("Program interrupted and terminated by signal.")
     asyncio.create_task(asyncio_workers.shutdown())
+    exit(0)
 
 
 def setup_signal_handlers():

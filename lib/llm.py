@@ -117,8 +117,17 @@ if __name__ == '__main__':
     async def main():
         openrouter = Openrouter()
         print(await openrouter.check_limits())
-        # post_assistant = PostAssistant(llm_api=openrouter)
-        # await asyncio_workers.start(1)
+        post_assistant = PostAssistant(llm_api=openrouter)
+        await asyncio_workers.start(1)
+        await post_assistant.check_channel_message(
+            '''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.
+
+    • Пишем нужный промпт
+    • Выбираем стиль и качество (стандарт/высокое)
+    • Скачиваем ГОТОВОЕ лого в нужном формате
+
+    Фрилансеры уже потирают ручки ''',
+        )
 
 
     #     print(llm_task_content)
