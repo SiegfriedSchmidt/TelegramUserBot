@@ -38,6 +38,8 @@ async def commands_handler(cmd):
         await client.disconnect()
     elif cmd == '/logs':
         await client.send_file(admin, log_stream.get_file())
+    elif cmd == '/limits':
+        await notify(await openrouter.check_limits())
     else:
         await notify("Нифига не понимайт")
 
@@ -108,4 +110,5 @@ if __name__ == '__main__':
             client.loop.run_until_complete(main())
     except KeyboardInterrupt:
         logger.info("Program interrupted and terminated.")
+    finally:
         client.loop.run_until_complete(asyncio_workers.shutdown())

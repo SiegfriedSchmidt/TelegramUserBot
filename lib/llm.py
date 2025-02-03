@@ -54,8 +54,10 @@ class Openrouter:
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://openrouter.ai/api/v1/auth/key', headers=headers) as resp:
-                print(resp.status)
-                print(await resp.text())
+                if resp.status == 200:
+                    return await resp.text()
+                else:
+                    return "Error"
 
     async def chat_complete(self, messages: List):
         return await asyncio_workers.enqueue_task(self.__chat_complete_attempts, messages)
@@ -114,7 +116,7 @@ class PostAssistant:
 if __name__ == '__main__':
     async def main():
         openrouter = Openrouter()
-        await openrouter.check_limits()
+        print(await openrouter.check_limits())
         # post_assistant = PostAssistant(llm_api=openrouter)
         # await asyncio_workers.start(1)
 

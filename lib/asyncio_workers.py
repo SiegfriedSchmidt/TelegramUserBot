@@ -13,9 +13,7 @@ class AsyncioWorkers:
 
     async def __worker(self, worker_id: int):
         while True:
-            print(1)
             future, func, args, kwargs = await self.queue.get()
-            print(2)
             logger.info(f'Worker {worker_id} received a task.')
             try:
                 logger.info(f'Worker {worker_id} completed a task.')
@@ -34,7 +32,6 @@ class AsyncioWorkers:
         loop = asyncio.get_running_loop()
         future = loop.create_future()
         await self.queue.put((future, func, args, kwargs))
-        print(3)
         return await future
 
     async def shutdown(self):
