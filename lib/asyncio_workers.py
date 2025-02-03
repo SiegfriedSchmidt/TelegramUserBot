@@ -17,8 +17,8 @@ class AsyncioWorkers:
             future, func, args, kwargs = await self.queue.get()
             logger.info(f'Worker {worker_id} received a task.')
             try:
-                logger.info(f'Worker {worker_id} completed a task.')
                 future.set_result(await func(*args, **kwargs))
+                logger.info(f'Worker {worker_id} completed a task.')
             except Exception as e:
                 future.set_exception(e)
             finally:
