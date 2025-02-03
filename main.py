@@ -44,7 +44,7 @@ async def commands_handler(cmd: str):
         messages = [
             {
                 "role": "user",
-                "content": cmd.split()[1]
+                "content": cmd[5:]
             }
         ]
         result = await openrouter.chat_complete(messages)
