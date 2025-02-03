@@ -6,6 +6,7 @@ services:
     container_name: telegram-post-bot
     environment:
       - SECRET_FOLDER=/app/secret
+      - TZ=Europe/Moscow
     volumes:
       - ./secret:/app/secret
 
