@@ -28,7 +28,7 @@ async def notify(message: str, log=False):
         logger.info(f'Notification: {message}')
 
 
-async def commands_handler(cmd):
+async def commands_handler(cmd: str):
     if cmd == '/help':
         await notify("/help, /show, /stop, \logs")
     elif cmd == '/show':
@@ -40,6 +40,15 @@ async def commands_handler(cmd):
         await client.send_file(admin, log_stream.get_file())
     elif cmd == '/limits':
         await notify(await openrouter.check_limits())
+    elif cmd.split()[0] == '/ask':
+        messages = [
+            {
+                "role": "user",
+                "content": cmd.split()[1]
+            }
+        ]
+        result = await openrouter.chat_complete(messages)
+        await notify(result if result else "Nothing.")
     else:
         await notify("Нифига не понимайт")
 

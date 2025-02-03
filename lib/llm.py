@@ -31,7 +31,7 @@ class Openrouter:
 
         return completion.choices[0].message.content
 
-    async def __chat_complete_attempts(self, messages: List, attempts=6, timeout=30) -> str:
+    async def __chat_complete_attempts(self, messages: List, attempts, timeout) -> str:
         rs = ''
         for attempt in range(attempts):
             try:
@@ -47,7 +47,8 @@ class Openrouter:
             logger.error(f'All attempts ({attempts}) have failed!')
         return rs
 
-    async def check_limits(self):
+    @staticmethod
+    async def check_limits():
         headers = {
             "Authorization": f"Bearer {config.openrouter_api_key.get_secret_value()}",
         }
@@ -59,8 +60,8 @@ class Openrouter:
                 else:
                     return "Error"
 
-    async def chat_complete(self, messages: List):
-        return await asyncio_workers.enqueue_task(self.__chat_complete_attempts, messages)
+    async def chat_complete(self, messages: List, attempts=6, timeout=30):
+        return await asyncio_workers.enqueue_task(self.__chat_complete_attempts, messages, attempts, timeout)
 
 
 class PostAssistant:
