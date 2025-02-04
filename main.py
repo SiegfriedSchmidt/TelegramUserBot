@@ -5,7 +5,7 @@ import asyncio
 import signal
 
 from lib.config_reader import config
-from lib.init import telegram_session_path
+from lib.init import telegram_session_path, llm_task_content
 from lib.logger import logger, log_stream
 from lib.llm import Openrouter, PostAssistant
 from lib.asyncio_workers import asyncio_workers
@@ -33,14 +33,16 @@ async def commands_handler(cmd: str):
     global is_watching
 
     if cmd == '/help':
-        await notify("/help, /show, /stop, /logs, /limits, /ask, /watch, /get_requests")
+        await notify('/help, /show, /stop, /logs_file, /logs, /limits, /ask, /watch, /get_requests, /get_task_prompt')
     elif cmd == '/show':
         await notify(f'''[{post_assistant.get_previous_posts_string()}]''')
     elif cmd == '/stop':
         await notify('Bot stopped.', log=True)
         await client.disconnect()
-    elif cmd == '/logs':
+    elif cmd == '/logs_file':
         await client.send_file(admin, log_stream.get_file())
+    elif cmd == '/logs':
+        await notify(str(log_stream))
     elif cmd == '/limits':
         await notify(await openrouter.check_limits())
     elif cmd.split()[0] == '/ask':
@@ -59,6 +61,8 @@ async def commands_handler(cmd: str):
         await notify(
             f"Number of requests {openrouter.successful_requests}/{openrouter.total_requests} (successful/total)."
         )
+    elif cmd == '/get_task_prompt':
+        await notify(llm_task_content)
     else:
         await notify("Нифига не понимайт")
 
@@ -69,8 +73,7 @@ async def my_event_handler(event: NewMessage.Event):
 
     try:
         if chat.username == admin:
-            await commands_handler(event.message.text)
-
+            return await commands_handler(event.message.text)
     except Exception as e:
         ...
 
