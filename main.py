@@ -20,7 +20,7 @@ neural_networks_channel = int(config.telegram_channel.get_secret_value())
 admin = config.telegram_admin.get_secret_value()
 openrouter = Openrouter()
 post_assistant = PostAssistant(llm_api=openrouter)
-is_watching = True
+is_watching = False
 
 
 async def notify(message: str, log=False):
@@ -33,7 +33,7 @@ async def commands_handler(cmd: str):
     global is_watching
 
     if cmd == '/help':
-        await notify("/help, /show, /stop, /logs, /limits, /ask, /watch")
+        await notify("/help, /show, /stop, /logs, /limits, /ask, /watch, /get_requests")
     elif cmd == '/show':
         await notify(f'''[{post_assistant.get_previous_posts_string()}]''')
     elif cmd == '/stop':
@@ -55,6 +55,10 @@ async def commands_handler(cmd: str):
     elif cmd == '/watch':
         is_watching = not is_watching
         await notify("Watching enabled." if is_watching else "Watching disabled.")
+    elif cmd == '/get_requests':
+        await notify(
+            f"Number of requests {openrouter.successful_requests}/{openrouter.total_requests} (successful/total)."
+        )
     else:
         await notify("Нифига не понимайт")
 
@@ -67,7 +71,6 @@ async def my_event_handler(event: NewMessage.Event):
         if chat.username == admin:
             await commands_handler(event.message.text)
 
-        return
     except Exception as e:
         ...
 

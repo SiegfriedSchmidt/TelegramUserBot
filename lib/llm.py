@@ -22,8 +22,10 @@ class Openrouter:
             api_key=config.openrouter_api_key.get_secret_value(),
         )
         self.model = model
+        self.total_requests = 0
+        self.successful_requests = 0
 
-    async def __chat_complete(self, messages: List):
+    async def __chat_complete(self, messages: List) -> str:
         completion = await self.client.chat.completions.create(
             model="deepseek/deepseek-r1:free",
             messages=messages
@@ -34,11 +36,13 @@ class Openrouter:
     async def __chat_complete_attempts(self, messages: List, attempts, timeout) -> str:
         rs = ''
         for attempt in range(attempts):
+            self.total_requests += 1
             try:
                 rs = await self.__chat_complete(messages)
             except Exception as e:
                 logger.warning(f'Attempt get answer {attempt + 1}/{attempts} failed: {e}')
-                await asyncio.sleep(timeout)
+                if attempt != attempts - 1:
+                    await asyncio.sleep(timeout)
 
             if rs:
                 break
@@ -61,7 +65,10 @@ class Openrouter:
                     return "Error"
 
     async def chat_complete(self, messages: List, attempts=6, timeout=30):
-        return await asyncio_workers.enqueue_task(self.__chat_complete_attempts, messages, attempts, timeout)
+        result = await asyncio_workers.enqueue_task(self.__chat_complete_attempts, messages, attempts, timeout)
+        if result:
+            self.successful_requests += 1
+        return result
 
 
 class PostAssistant:

@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 
+# constants
 secret_folder_path = Path(os.environ.get("SECRET_FOLDER", "."))
 if str(secret_folder_path) == '.':
     secret_folder_path = Path(os.path.dirname(os.path.realpath(__file__)))
