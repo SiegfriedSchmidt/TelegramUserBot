@@ -16,6 +16,7 @@ httpx==0.28.1
 idna==3.10
 jiter==0.8.2
 multidict==6.1.0
+nest-asyncio==1.6.0
 openai==1.61.0
 propcache==0.2.1
 pyaes==1.6.1

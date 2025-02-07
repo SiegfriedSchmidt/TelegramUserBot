@@ -1,44 +1,59 @@
 from openai import AsyncOpenAI
-from typing import List
 import asyncio
 import re
 import aiohttp
 
-from lib.asyncio_workers import asyncio_workers
-from lib.config_reader import config
+from lib.asyncio_workers import AsyncioWorkers
 from lib.logger import logger
 from lib.init import llm_task_content
 
-test_previous_posts = [
-    "Интересные факты о развитии нейронных сетей и их применение в медицине",
-    "Анализ современных алгоритмов глубокого обучения"
-]
+
+class Dialog:
+    def __init__(self):
+        self.messages = []
+
+    def add_user_message(self, message):
+        self.messages.append({
+            "role": "user",
+            "content": message
+        })
+
+    def add_assistant_message(self, message):
+        self.messages.append({
+            "role": "assistant",
+            "content": message
+        })
+
+    def pop_message(self):
+        self.messages.pop()
 
 
 class Openrouter:
-    def __init__(self, model="deepseek/deepseek-r1:free"):
+    def __init__(self, api_key: str, workers: AsyncioWorkers, model="deepseek/deepseek-r1:free"):
+        self.api_key = api_key
+        self.workers = workers
+        self.model = model
         self.client = AsyncOpenAI(
             base_url="https://openrouter.ai/api/v1",
-            api_key=config.openrouter_api_key.get_secret_value(),
+            api_key=self.api_key,
         )
-        self.model = model
         self.total_requests = 0
         self.successful_requests = 0
 
-    async def __chat_complete(self, messages: List) -> str:
+    async def __chat_complete(self, dialog: Dialog) -> str:
         completion = await self.client.chat.completions.create(
             model="deepseek/deepseek-r1:free",
-            messages=messages
+            messages=dialog.messages
         )
 
         return completion.choices[0].message.content
 
-    async def __chat_complete_attempts(self, messages: List, attempts, timeout) -> str:
+    async def __chat_complete_attempts(self, dialog: Dialog, attempts, timeout) -> str:
         rs = ''
         for attempt in range(attempts):
             self.total_requests += 1
             try:
-                rs = await self.__chat_complete(messages)
+                rs = await self.__chat_complete(dialog)
             except Exception as e:
                 logger.warning(f'Attempt get answer {attempt + 1}/{attempts} failed: {e}')
                 if attempt != attempts - 1:
@@ -51,10 +66,9 @@ class Openrouter:
             logger.error(f'All attempts ({attempts}) have failed!')
         return rs
 
-    @staticmethod
-    async def check_limits():
+    async def check_limits(self):
         headers = {
-            "Authorization": f"Bearer {config.openrouter_api_key.get_secret_value()}",
+            "Authorization": f"Bearer {self.api_key}",
         }
 
         async with aiohttp.ClientSession() as session:
@@ -64,8 +78,8 @@ class Openrouter:
                 else:
                     return "Error"
 
-    async def chat_complete(self, messages: List, attempts=6, timeout=30):
-        result = await asyncio_workers.enqueue_task(self.__chat_complete_attempts, messages, attempts, timeout)
+    async def chat_complete(self, dialog: Dialog, attempts=6, timeout=30):
+        result = await self.workers.enqueue_task(self.__chat_complete_attempts, dialog, attempts, timeout)
         if result:
             self.successful_requests += 1
         return result
@@ -93,18 +107,16 @@ class PostAssistant:
 
     async def check_channel_message(self, post_message: str, attempts=3) -> (bool, bool, str):
         logger.info("Start checking new post message...")
-        messages = [
-            {
-                "role": "user",
-                "content": llm_task_content
-            }, {
-                "role": "user",
-                "content": f'''New Post Content: "{post_message}"\nPrevious Posts Information: [{self.get_previous_posts_string()}]'''
-            }
-        ]
+        dialog = Dialog()
+        dialog.add_user_message(llm_task_content)
+        dialog.add_user_message(
+            f'''New Post Content: "{post_message}"\nPrevious Posts Information: [{self.get_previous_posts_string()}]'''
+        )
+
+        print(dialog.messages)
 
         for attempt in range(attempts):
-            result = await self.llm_api.chat_complete(messages)
+            result = await self.llm_api.chat_complete(dialog)
 
             if not result:
                 return False, False, ''
@@ -122,11 +134,16 @@ class PostAssistant:
 
 
 if __name__ == '__main__':
+    from config_reader import config
+    from asyncio_workers import AsyncioWorkers
+
+
     async def main():
-        openrouter = Openrouter()
+        workers = AsyncioWorkers()
+        openrouter = Openrouter(config.openrouter_api_key.get_secret_value(), workers)
         print(await openrouter.check_limits())
         post_assistant = PostAssistant(llm_api=openrouter)
-        await asyncio_workers.start(1)
+        await openrouter.workers.start(1)
         await post_assistant.check_channel_message(
             '''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.
 

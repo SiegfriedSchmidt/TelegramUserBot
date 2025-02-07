@@ -3,14 +3,15 @@ from lib.logger import logger
 
 
 class AsyncioWorkers:
-    def __init__(self, num_workers=1, rate=3):
+    def __init__(self, rate=3):
         self.queue = asyncio.Queue()
         self.rate = rate
         self.workers = []
 
     async def start(self, num_workers=1):
-        if not self.workers:
-            self.workers = [asyncio.create_task(self.__worker(i)) for i in range(num_workers)]
+        if self.workers:
+            return Exception('Workers already started!')
+        self.workers = [asyncio.create_task(self.__worker(i)) for i in range(num_workers)]
 
     async def __worker(self, worker_id: int):
         while True:
@@ -42,17 +43,17 @@ class AsyncioWorkers:
         await asyncio.gather(*self.workers, return_exceptions=True)
 
 
-asyncio_workers = AsyncioWorkers()
-
 if __name__ == '__main__':
+    asyncio_workers_test = AsyncioWorkers()
+
     async def main():
-        await asyncio_workers.start(num_workers=1)
+        await asyncio_workers_test.start(num_workers=1)
 
         async def sample_task(x):
             await asyncio.sleep(1)
             return x * 2
 
-        result = await asyncio_workers.enqueue_task(sample_task, 10)
+        result = await asyncio_workers_test.enqueue_task(sample_task, 10)
         print("Result:", result)
 
 

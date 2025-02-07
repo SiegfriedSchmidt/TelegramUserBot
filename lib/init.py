@@ -32,3 +32,8 @@ Output Format:
 Meet the requirements: "True/False"
 Brief information: "brief info about post"
 '''
+
+test_previous_posts = [
+    "Интересные факты о развитии нейронных сетей и их применение в медицине",
+    "Анализ современных алгоритмов глубокого обучения"
+]
