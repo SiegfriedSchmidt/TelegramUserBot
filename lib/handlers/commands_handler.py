@@ -1,15 +1,28 @@
-from telethon.events import NewMessage
-
 from lib.database import Database
 from telethon import events
+
+from lib.general.filters import Channel, Chat, Command, Event
 from lib.general.router import Router
 
 router = Router()
 
 
-@router(events.NewMessage(), )
-async def help(event, db: Database):
-    await event.reply('/help, /show, /stop, /logs_file, /logs, /limits, /ask, /watch, /get_requests, /get_task_prompt')
+# '/help, /show, /stop, /logs_file, /logs, /limits, /ask, /watch, /get_requests, /get_task_prompt'
+@router(events.NewMessage(), Channel())
+async def channel(event: Event, db: Database):
+    print(1)
+    # print(event.message.text)
+
+
+@router(events.NewMessage(), Chat() & Command('help'))
+async def help(event: Event, db: Database):
+    print(2)
+    # await event.respond(', '.join(map(lambda r: '/' + r.name, router.handlers)))
+
+@router(events.NewMessage(), Chat() & Command('lol'))
+async def lol(event: Event, db: Database):
+    print(3)
+    # await event.respond(', '.join(map(lambda r: '/' + r.name, router.handlers)))
 
 # async def commands_handler(cmd: str):
 #     if cmd == '/help':

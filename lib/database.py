@@ -16,7 +16,7 @@ class Database:
         self.post_assistant = PostAssistant(llm_api=self.openrouter)
         self.client = TelegramClient(
             telegram_session_path,
-            config.telegram_api_id.get_secret_value(),
+            int(config.telegram_api_id.get_secret_value()),
             config.telegram_api_hash.get_secret_value()
         )
 
