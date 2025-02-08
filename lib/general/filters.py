@@ -1,9 +1,11 @@
-from telethon import events
-from typing import TypeAlias, Callable
+from typing import TypeAlias
+from lib.general.events import Event
 import abc
 
-Event: TypeAlias = "events.NewMessage"
-FilterType: TypeAlias = "Callable[[Event], bool] | Combinable"
+# avoid circular import
+FilterType: TypeAlias = "Combinable"
+
+from lib.general.router import Handler
 
 
 class Combinable(abc.ABC):
@@ -32,6 +34,9 @@ class Combinable(abc.ABC):
     def __invert__(self) -> "Not | FilterType":
         return self.filter if isinstance(self, Not) else Not(self)
 
+    def setup(self, handler: Handler) -> None:
+        pass
+
     @abc.abstractmethod
     def __call__(self, event: Event) -> bool:
         pass
@@ -41,16 +46,17 @@ class Any(Combinable):
     def __init__(self, *filters: FilterType):
         self.filters = filters
 
+    def setup(self, handler: Handler) -> None:
+        for filter in self.filters:
+            filter.setup(handler)
+
     def __call__(self, event: Event) -> bool:
         for filter in self.filters:
             if filter(event):
                 return True
 
 
-class All(Combinable):
-    def __init__(self, *filters: FilterType):
-        self.filters = filters
-
+class All(Any):
     def __call__(self, event: Event) -> bool:
         for filter in self.filters:
             if not filter(event):
@@ -62,6 +68,9 @@ class All(Combinable):
 class Not(Combinable):
     def __init__(self, filter: FilterType):
         self.filter = filter
+
+    def setup(self, handler: Handler) -> None:
+        self.filter.setup(handler)
 
     def __call__(self, event: Event) -> bool:
         return not self.filter(event)
@@ -92,9 +101,15 @@ class Group(Combinable):
 
 
 class Command(Combinable):
-    def __init__(self, cmd):
+    def __init__(self, cmd: str = ''):
         self.cmd = cmd
         super().__init__()
 
+    def setup(self, handler: Handler) -> None:
+        if self.cmd:
+            self.cmd = self.cmd if self.cmd.startswith('/') else f'/{self.cmd}'
+        else:
+            self.cmd = f'/{handler.name}'
+
     def __call__(self, event: Event) -> bool:
-        return event.message.text.startswith(f'/{self.cmd}')
+        return event.message.text.startswith(self.cmd)

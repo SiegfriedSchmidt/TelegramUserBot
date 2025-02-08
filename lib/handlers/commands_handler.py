@@ -1,28 +1,42 @@
 from lib.database import Database
 from telethon import events
 
-from lib.general.filters import Channel, Chat, Command, Event
+from lib.general.filters import Channel, Chat, Command, FilterType
+from lib.general.events import Event
 from lib.general.router import Router
 
-router = Router()
+
+def event_factory() -> Event:
+    return events.NewMessage()
+
+
+def filter_factory() -> FilterType:
+    return Chat() & Command()
+
+
+router = Router(event_factory, filter_factory)
 
 
 # '/help, /show, /stop, /logs_file, /logs, /limits, /ask, /watch, /get_requests, /get_task_prompt'
-@router(events.NewMessage(), Channel())
-async def channel(event: Event, db: Database):
-    print(1)
-    # print(event.message.text)
+# @router(filter=Channel())
+# async def channel(event: Event, db: Database):
+#     print(1)
+#     # print(event.message.text)
 
 
-@router(events.NewMessage(), Chat() & Command('help'))
+@router()
 async def help(event: Event, db: Database):
-    print(2)
-    # await event.respond(', '.join(map(lambda r: '/' + r.name, router.handlers)))
+    await event.respond(', '.join(map(lambda r: '/' + r.name, router.handlers)))
 
-@router(events.NewMessage(), Chat() & Command('lol'))
+
+@router()
 async def lol(event: Event, db: Database):
-    print(3)
-    # await event.respond(', '.join(map(lambda r: '/' + r.name, router.handlers)))
+    await event.respond('lol')
+
+
+@router(filter=Command('/'), override_filter=True)
+async def another(event: Event, db: Database):
+    await event.respond('another')
 
 # async def commands_handler(cmd: str):
 #     if cmd == '/help':

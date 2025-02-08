@@ -1,8 +1,13 @@
 from telethon import TelegramClient
 from lib.database import Database
-from typing import List, Callable
+from typing import List, Callable, Type
 
-from lib.general.filters import FilterType, Event
+from lib.general.filters import FilterType
+from lib.general.events import Event
+
+
+class RouterError(Exception):
+    pass
 
 
 class Handler:
@@ -14,12 +19,33 @@ class Handler:
 
 
 class Router:
-    def __init__(self):
+    def __init__(self, event: Callable[[], Event] = None, filter: Callable[[], FilterType] = None):
         self.handlers: List[Handler] = []
+        self.router_event = event
+        self.router_filter = filter
 
-    def __call__(self, event: Event, filter: FilterType = None):
+    def __call__(self, event: Event = None, filter: FilterType = None, override_event=False, override_filter=False):
         def wrapper(callback: Callable):
-            self.handlers.append(Handler(callback, event, callback.__name__, filter))
+            handler_event = event
+            handler_filter = filter
+
+            if self.router_event and not override_event:
+                if handler_event:
+                    raise RouterError('Event placed on router and handler at the same time!')
+                handler_event = self.router_event()
+            else:
+                if handler_event is None:
+                    raise RouterError('No event specified!')
+
+            if self.router_filter and not override_filter:
+                if handler_filter:
+                    handler_filter &= self.router_filter()
+                else:
+                    handler_filter = self.router_filter()
+
+            handler = Handler(callback, handler_event, callback.__name__, handler_filter)
+            handler_filter.setup(handler)
+            self.handlers.append(handler)
             return callback
 
         return wrapper
