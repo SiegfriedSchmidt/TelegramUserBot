@@ -5,24 +5,12 @@ from telethon import events
 
 from lib.logger import logger
 from lib.database import Database
+from lib.utils.telethon_utils import notify
 
-from lib.handlers import commands_handler
+from lib.handlers import commands_handler, channel_messages_handler
 from lib.utils.get_exception import get_exception
 
 nest_asyncio.apply()
-
-
-# async def join_channel(db: Database, channel_id: str):
-#     channel = await db.client.get_entity(channel_id)
-#     await db.client(JoinChannelRequest(channel))
-#     logger.info(f'Joined channel {channel_id}')
-
-
-async def notify(db: Database, message: str, log=False):
-    for admin in db.admins:
-        await db.client.send_message(admin, message)
-    if log:
-        logger.info(f'Notification: {message}')
 
 
 def on_shutdown(db: Database, sig=0):
@@ -55,13 +43,15 @@ async def main():
         await on_start(db)
 
         # Events
-        commands_handler.router.register_router(db.client, db)
+        db.client.add_event_handler(commands_handler.router.get_dispatcher(db), events.NewMessage())
+        db.client.add_event_handler(channel_messages_handler.router.get_dispatcher(db), events.NewMessage())
 
         await db.client.run_until_disconnected()
+        logger.info("Bot stopped.")
     except KeyboardInterrupt:
         logger.info("Program terminated by KeyboardInterrupt.")
     except Exception as e:
-        logger.error(f"Program terminated by Error: \n---\n{get_exception(e)}---")
+        logger.error(f"Program terminated by Error: {get_exception(e)}")
     finally:
         on_shutdown(db)
 

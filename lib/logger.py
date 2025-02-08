@@ -65,6 +65,9 @@ class LogStream:
     def __str__(self):
         return "".join(self.logs)
 
+    def __bool__(self):
+        return bool(self.logs)
+
 
 def create_logger(name: str, app_name: str):
     colorama.init()

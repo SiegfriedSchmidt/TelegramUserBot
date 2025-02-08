@@ -1,9 +1,9 @@
-from telethon import TelegramClient
 from lib.database import Database
 from typing import List, Callable, Type
 
 from lib.general.filters import FilterType
 from lib.general.events import Event
+from lib.general.middleware import Middleware
 
 
 class RouterError(Exception):
@@ -11,31 +11,22 @@ class RouterError(Exception):
 
 
 class Handler:
-    def __init__(self, callback: Callable, event, name, filter: FilterType = None):
+    def __init__(self, callback: Callable, name: str, filter: FilterType = None, middleware: Middleware = None):
         self.callback = callback
-        self.event = event
         self.filter = filter
         self.name = name
+        self.middleware = middleware
 
 
 class Router:
-    def __init__(self, event: Callable[[], Event] = None, filter: Callable[[], FilterType] = None):
+    def __init__(self, filter: Callable[[], FilterType] = None, middleware: Middleware = None):
         self.handlers: List[Handler] = []
-        self.router_event = event
         self.router_filter = filter
+        self.router_middleware = middleware
 
-    def __call__(self, event: Event = None, filter: FilterType = None, override_event=False, override_filter=False):
+    def __call__(self, filter: FilterType = None, middleware: Middleware = None, override_filter=False):
         def wrapper(callback: Callable):
-            handler_event = event
             handler_filter = filter
-
-            if self.router_event and not override_event:
-                if handler_event:
-                    raise RouterError('Event placed on router and handler at the same time!')
-                handler_event = self.router_event()
-            else:
-                if handler_event is None:
-                    raise RouterError('No event specified!')
 
             if self.router_filter and not override_filter:
                 if handler_filter:
@@ -43,19 +34,28 @@ class Router:
                 else:
                     handler_filter = self.router_filter()
 
-            handler = Handler(callback, handler_event, callback.__name__, handler_filter)
+            handler = Handler(callback, callback.__name__, handler_filter, middleware)
             handler_filter.setup(handler)
             self.handlers.append(handler)
             return callback
 
         return wrapper
 
-    def register_router(self, client: TelegramClient, db: Database):
-        for handler in self.handlers:
-            async def wrapped(event, current_handler=handler):
-                if (current_handler.filter is not None) and not current_handler.filter(event):
+    def get_dispatcher(self, db: Database):
+        async def dispatch(event: Event):
+            for handler in self.handlers:
+                if handler.filter is None or await handler.filter(event):
+                    passed, kwargs = True, {}
+                    if self.router_middleware:
+                        passed, kwargs = await self.router_middleware(event)
+                    if handler.middleware:
+                        passed2, kwargs2 = await handler.middleware(event)
+                        passed = passed and passed2
+                        kwargs.update(kwargs2)
+
+                    if passed:
+                        await handler.callback(event, db, **kwargs)
+
                     return
 
-                await current_handler.callback(event, db)
-
-            client.add_event_handler(wrapped, handler.event)
+        return dispatch

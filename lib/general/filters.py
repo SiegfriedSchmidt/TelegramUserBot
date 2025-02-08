@@ -1,4 +1,4 @@
-from typing import TypeAlias
+from typing import TypeAlias, List
 from lib.general.events import Event
 import abc
 
@@ -38,7 +38,7 @@ class Combinable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def __call__(self, event: Event) -> bool:
+    async def __call__(self, event: Event) -> bool:
         pass
 
 
@@ -50,16 +50,16 @@ class Any(Combinable):
         for filter in self.filters:
             filter.setup(handler)
 
-    def __call__(self, event: Event) -> bool:
+    async def __call__(self, event: Event) -> bool:
         for filter in self.filters:
-            if filter(event):
+            if await filter(event):
                 return True
 
 
 class All(Any):
-    def __call__(self, event: Event) -> bool:
+    async def __call__(self, event: Event) -> bool:
         for filter in self.filters:
-            if not filter(event):
+            if not await filter(event):
                 return False
 
         return True
@@ -72,38 +72,30 @@ class Not(Combinable):
     def setup(self, handler: Handler) -> None:
         self.filter.setup(handler)
 
-    def __call__(self, event: Event) -> bool:
-        return not self.filter(event)
+    async def __call__(self, event: Event) -> bool:
+        return not await self.filter(event)
 
 
 class Chat(Combinable):
-    def __init__(self):
-        super().__init__()
-
-    def __call__(self, event: Event) -> bool:
+    async def __call__(self, event: Event) -> bool:
         return event.is_private
 
 
 class Channel(Combinable):
-    def __init__(self):
-        super().__init__()
-
-    def __call__(self, event: Event) -> bool:
+    async def __call__(self, event: Event) -> bool:
+        chat = await event.get_chat()
+        print(chat)
         return event.is_channel
 
 
 class Group(Combinable):
-    def __init__(self):
-        super().__init__()
-
-    def __call__(self, event: Event) -> bool:
+    async def __call__(self, event: Event) -> bool:
         return event.is_group
 
 
 class Command(Combinable):
     def __init__(self, cmd: str = ''):
         self.cmd = cmd
-        super().__init__()
 
     def setup(self, handler: Handler) -> None:
         if self.cmd:
@@ -111,5 +103,11 @@ class Command(Combinable):
         else:
             self.cmd = f'/{handler.name}'
 
-    def __call__(self, event: Event) -> bool:
-        return event.message.text.startswith(self.cmd)
+    async def __call__(self, event: Event) -> bool:
+        text = event.message.text
+        if self.cmd == '/':
+            return text.startswith(self.cmd)
+        space_pos = text.find(' ')
+        if space_pos == -1:
+            return text == self.cmd
+        return text[:space_pos] == self.cmd
