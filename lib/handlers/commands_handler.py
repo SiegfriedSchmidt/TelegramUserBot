@@ -83,6 +83,14 @@ async def pending_posting(event: Event, db: Database):
 
 
 @router()
+async def stub_posting_check(event: Event, db: Database):
+    db.params.stub_posting_check = not db.params.stub_posting_check
+    await event.respond(
+        "Stub posting check enabled." if db.params.stub_posting_check else "Stub posting check disabled."
+    )
+
+
+@router()
 async def night_posting(event: Event, db: Database):
     db.params.is_night_posting = not db.params.is_night_posting
     await event.respond("Night posting enabled." if db.params.is_night_posting else "Night posting disabled.")
@@ -98,17 +106,21 @@ async def send_pending_posts(event: Event, db: Database):
     if len(db.params.pending_posts) == 0:
         return await event.respond("No pending posts.")
 
-    await event.respond(f"Run worker with '{len(db.params.pending_posts)}' tasks.")
-    main_logger.info(f"Forward pending posts '{len(db.params.pending_posts)}'")
+    count = len(db.params.pending_posts)
 
-    async def send_post_with_waiting(db: Database, post: Post, waiting=10):
+    await event.respond(f"Run worker with '{count}' tasks.")
+    main_logger.info(f"Forward pending posts '{count}'")
+
+    async def send_post_with_waiting(db: Database, post: Post, last: bool, waiting=10):
         await send_post(db, post)
-        await asyncio.sleep(waiting)
+        if not last:
+            await asyncio.sleep(waiting)
 
-    for post in db.params.pending_posts:
-        await db.asyncio_workers.enqueue_task(send_post_with_waiting, db, post)
+    for idx, post in enumerate(db.params.pending_posts):
+        await db.asyncio_workers.enqueue_task(send_post_with_waiting, db, post, idx == count - 1)
 
     db.params.pending_posts.clear()
+    await event.respond(f"Pending posts successfully sent.")
 
 
 @router()

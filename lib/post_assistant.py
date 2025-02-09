@@ -40,13 +40,19 @@ class PostAssistant:
     def get_previous_posts_string(self):
         return ", ".join(map(lambda x: f'"{x}"', self.previous_posts))
 
-    async def check_channel_message(self, post: Post, attempts=3):
+    async def check_channel_message(self, post: Post, stub_check=False, attempts=3):
         asis_logger.info("Start checking new post message...")
         dialog = Dialog()
         dialog.add_user_message(llm_task_content)
         dialog.add_user_message(
             f'''New Post Content: "{post.message.text}"\nPrevious Posts Information: [{self.get_previous_posts_string()}]'''
         )
+
+        if stub_check:
+            success, meet_requirements, brief_information = True, True, "Summary"
+            post.fill_info(brief_information, meet_requirements, success)
+            asis_logger.info('Stub check enabled, use stub params')
+            return
 
         async def try_attempts():
             for attempt in range(attempts):

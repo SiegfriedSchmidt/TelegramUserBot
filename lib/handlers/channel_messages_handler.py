@@ -38,7 +38,7 @@ async def my_event_handler(event: Event, db: Database):
             return
 
         post = Post(event.message)
-        await db.post_assistant.check_channel_message(post)
+        await db.post_assistant.check_channel_message(post, db.params.stub_posting_check)
         if not post.successfully_checked:
             main_logger.error(f"Post assistant failed accomplish task.")
         else:

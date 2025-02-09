@@ -9,7 +9,8 @@ class Params:
         self.is_posting = True
         self.is_night_posting = False
         self.is_pending_posting = True
-        self.night_interval = (time(23, 0), time(8, 0))
+        self.stub_posting_check = False
+        self.night_interval = (time(23, 0), time(14, 0))
         self.pending_posts: List[Post] = []
 
     def __str__(self):
