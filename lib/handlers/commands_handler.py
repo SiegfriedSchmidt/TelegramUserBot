@@ -2,7 +2,7 @@ import asyncio
 
 from lib.database import Database
 
-from lib.general.filters import Channel, Chat, Command, FilterType
+from lib.general.filters import Channel, Chat, Command
 from lib.general.events import Event
 from lib.general.middleware import CommandMiddleware, AccessMiddleware
 from lib.general.router import Router
