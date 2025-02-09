@@ -3,21 +3,21 @@ from lib.asyncio_workers import AsyncioWorkers
 from lib.config_reader import config
 from lib.llm import Openrouter
 from lib.params import Params
-from lib.post_assistant import PostAssistant, Post
+from lib.post_assistant import PostAssistant
 from lib.init import telegram_session_path
 from lib.stats import Stats
 
 
 class Database:
     def __init__(self):
-        self.admins = [config.telegram_admin.get_secret_value()]
+        self.admins = config.telegram_admins
         self.neural_networks_channel = int(config.telegram_channel.get_secret_value())
 
         self.asyncio_workers = AsyncioWorkers()
-        self.params = Params()
+        self.params = Params(config.openrouter_api_keys)
         self.stats = Stats()
-        self.openrouter = Openrouter(config.openrouter_api_key.get_secret_value(), self.asyncio_workers, self.stats)
-        self.post_assistant = PostAssistant(llm_api=self.openrouter)
+        self.openrouter = Openrouter(self.params.keys.get_key(), self.asyncio_workers, self.stats)
+        self.post_assistant = PostAssistant(llm_api=self.openrouter, stats=self.stats)
         self.client = TelegramClient(
             telegram_session_path,
             int(config.telegram_api_id.get_secret_value()),

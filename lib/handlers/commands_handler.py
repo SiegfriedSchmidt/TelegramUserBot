@@ -140,6 +140,13 @@ async def get_task_prompt(event: Event, db: Database):
     await event.respond(llm_task_content)
 
 
+@router()
+async def rotate_keys(event: Event, db: Database):
+    db.params.keys.rotate_keys()
+    db.openrouter.api_key = db.params.keys.get_key()
+    await event.respond(f"Current key {db.params.keys.get_key_number()}")
+
+
 @router(filter=Command('/'), override_filter=True)
 async def another(event: Event, db: Database):
     await event.respond('команда непонятна')

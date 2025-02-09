@@ -1,6 +1,7 @@
 from openai import AsyncOpenAI
 import asyncio
 import aiohttp
+from pydantic import SecretStr
 
 from lib.asyncio_workers import AsyncioWorkers
 from lib.stats import Stats
@@ -35,8 +36,8 @@ class Dialog:
 
 
 class Openrouter:
-    def __init__(self, api_key: str, workers: AsyncioWorkers, stats: Stats, model="deepseek/deepseek-r1:free"):
-        self.api_key = api_key
+    def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats, model="deepseek/deepseek-r1:free"):
+        self.api_key = api_key.get_secret_value()
         self.workers = workers
         self.stats = stats
         self.model = model
@@ -96,19 +97,18 @@ class Openrouter:
 
 
 if __name__ == '__main__':
-    from config_reader import config
-    from asyncio_workers import AsyncioWorkers
-    from lib.post_assistant import PostAssistant, Post
-
-
-    async def main():
-        workers = AsyncioWorkers()
-        stats = Stats()
-        openrouter = Openrouter(config.openrouter_api_key.get_secret_value(), workers, stats)
-        print(await openrouter.check_limits())
-        post_assistant = PostAssistant(llm_api=openrouter)
-        await openrouter.workers.start(1)
-
+    # from config_reader import config
+    # from asyncio_workers import AsyncioWorkers
+    # from lib.post_assistant import PostAssistant, Post
+    #
+    #
+    # async def main():
+    #     workers = AsyncioWorkers()
+    #     stats = Stats()
+    #     openrouter = Openrouter(config.openrouter_api_key.get_secret_value(), workers, stats)
+    #     print(await openrouter.check_limits())
+    #     post_assistant = PostAssistant(llm_api=openrouter)
+    #     await openrouter.workers.start(1)
 
     #     post = Post('''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.
     #
@@ -140,4 +140,5 @@ if __name__ == '__main__':
     #     )])
     #     await asyncio_workers.shutdown()
 
-    asyncio.run(main())
+    # asyncio.run(main())
+    ...

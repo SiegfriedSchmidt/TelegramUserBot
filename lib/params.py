@@ -1,24 +1,43 @@
 from datetime import time
 from typing import List
-
+from pydantic import SecretStr
 from lib.post_assistant import Post
+from collections import deque
+
+
+class Keys:
+    def __init__(self, openrouter_api_keys: List[SecretStr]):
+        self.queue = deque(zip(openrouter_api_keys, range(1, len(openrouter_api_keys) + 1)))
+
+    def rotate_keys(self):
+        self.queue.rotate(1)
+
+    def get_key(self):
+        return self.queue[0][0]
+
+    def get_key_number(self):
+        return self.queue[0][1]
+
+    def __len__(self):
+        return len(self.queue)
 
 
 class Params:
-    def __init__(self):
+    def __init__(self, openrouter_api_keys: List[SecretStr]):
         self.is_posting = True
         self.is_night_posting = False
         self.is_pending_posting = True
         self.stub_posting_check = False
         self.night_interval = (time(23, 0), time(14, 0))
         self.pending_posts: List[Post] = []
+        self.keys = Keys(openrouter_api_keys)
 
     def __str__(self):
         string = ''
         for key, val in vars(self).items():
             if isinstance(val, bool) or isinstance(val, int) or isinstance(val, str):
                 string += f'{key}: {val}\n'
-            if isinstance(val, list):
+            if isinstance(val, list) or isinstance(val, Keys):
                 string += f'{key}: {len(val)}\n'
 
         return string
