@@ -44,3 +44,6 @@ class Stats:
         self.__successful_requests = 0
         self.__total_posts = 0
         self.__chosen_posts = 0
+
+    def __str__(self):
+        return f'{self.get_requests()}\n{self.get_posts()}'

@@ -11,11 +11,13 @@ class Post:
         self.brief_information = brief_information
         self.meet_requirements = meet_requirements
         self.checked_by_assistant = False
+        self.successfully_checked = False
 
-    def fill_info(self, brief_information: str, meet_requirements: bool, checked_by_assistant: bool):
+    def fill_info(self, brief_information: str, meet_requirements: bool, successfully_checked: bool):
         self.brief_information = brief_information
         self.meet_requirements = meet_requirements
-        self.checked_by_assistant = checked_by_assistant
+        self.successfully_checked = successfully_checked
+        self.checked_by_assistant = True
 
 
 class PostAssistant:
@@ -45,9 +47,6 @@ class PostAssistant:
         dialog.add_user_message(
             f'''New Post Content: "{post.message.text}"\nPrevious Posts Information: [{self.get_previous_posts_string()}]'''
         )
-
-        # REMOVE
-        print(dialog.messages)
 
         async def try_attempts():
             for attempt in range(attempts):

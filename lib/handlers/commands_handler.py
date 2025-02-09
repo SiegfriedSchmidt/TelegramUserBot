@@ -21,7 +21,7 @@ async def help(event: Event, db: Database):
 
 
 @router()
-async def show(event: Event, db: Database):
+async def previous_posts(event: Event, db: Database):
     await event.respond(f'[{db.post_assistant.get_previous_posts_string()}]')
 
 
@@ -72,52 +72,43 @@ async def ask(event: Event, db: Database, arg):
 
 @router()
 async def posting(event: Event, db: Database):
-    db.is_posting = not db.is_posting
-    await event.respond("Posting enabled." if db.is_posting else "Posting disabled.")
+    db.params.is_posting = not db.params.is_posting
+    await event.respond("Posting enabled." if db.params.is_posting else "Posting disabled.")
 
 
 @router()
 async def pending_posting(event: Event, db: Database):
-    db.is_pending_posting = not db.is_pending_posting
-    await event.respond("Pending posting enabled." if db.is_pending_posting else "Pending posting disabled.")
+    db.params.is_pending_posting = not db.params.is_pending_posting
+    await event.respond("Pending posting enabled." if db.params.is_pending_posting else "Pending posting disabled.")
 
 
 @router()
 async def night_posting(event: Event, db: Database):
-    db.is_night_posting = not db.is_night_posting
-    await event.respond("Night posting enabled." if db.is_night_posting else "Night posting disabled.")
+    db.params.is_night_posting = not db.params.is_night_posting
+    await event.respond("Night posting enabled." if db.params.is_night_posting else "Night posting disabled.")
 
 
 @router()
-async def count_pending_posts(event: Event, db: Database):
-    await event.respond(f"{len(db.pending_posts)}")
+async def info(event: Event, db: Database):
+    await event.respond(f"Stats:\n{db.stats}\nParams:\n{db.params}")
 
 
 @router()
 async def send_pending_posts(event: Event, db: Database):
-    if len(db.pending_posts) == 0:
+    if len(db.params.pending_posts) == 0:
         return await event.respond("No pending posts.")
 
-    await event.respond(f"Run worker with '{len(db.pending_posts)}' tasks.")
+    await event.respond(f"Run worker with '{len(db.params.pending_posts)}' tasks.")
+    main_logger.info(f"Forward pending posts '{len(db.params.pending_posts)}'")
 
     async def send_post_with_waiting(db: Database, post: Post, waiting=10):
         await send_post(db, post)
         await asyncio.sleep(waiting)
 
-    for post in db.pending_posts:
-        db.asyncio_workers.enqueue_task(send_post_with_waiting, db, post)
+    for post in db.params.pending_posts:
+        await db.asyncio_workers.enqueue_task(send_post_with_waiting, db, post)
 
-    db.pending_posts.clear()
-
-
-@router()
-async def get_requests(event: Event, db: Database):
-    await event.respond(f"Number of requests {db.stats.get_requests()}.")
-
-
-@router()
-async def get_posts(event: Event, db: Database):
-    await event.respond(f"Number of posts {db.stats.get_posts()}.")
+    db.params.pending_posts.clear()
 
 
 @router()

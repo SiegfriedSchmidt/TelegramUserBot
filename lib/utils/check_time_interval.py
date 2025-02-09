@@ -15,4 +15,4 @@ def check_time_interval(start_time, end_time):
 
 
 def is_night(db: Database):
-    return check_time_interval(*db.night_interval)
+    return check_time_interval(*db.params.night_interval)

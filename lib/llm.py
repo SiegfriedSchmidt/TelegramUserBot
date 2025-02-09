@@ -1,12 +1,10 @@
 from openai import AsyncOpenAI
 import asyncio
-import re
 import aiohttp
 
 from lib.asyncio_workers import AsyncioWorkers
 from lib.stats import Stats
-from lib.logger import llm_logger, asis_logger
-from lib.init import llm_task_content
+from lib.logger import llm_logger
 from lib.utils.get_exception import get_exception
 
 
@@ -65,11 +63,12 @@ class Openrouter:
                 llm_logger.warning(f'Attempt get answer {attempt + 1}/{attempts} failed: {get_exception(e)}')
                 if attempt != attempts - 1:
                     await asyncio.sleep(timeout)
+                continue
 
             if rs:
                 break
             else:
-                llm_logger.warning(f'Get empty response.')
+                llm_logger.warning(f'Attempt get answer {attempt + 1}/{attempts} failed: Get empty response.')
 
         if not rs:
             llm_logger.error(f'All attempts ({attempts}) have failed!')
