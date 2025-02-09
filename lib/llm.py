@@ -46,6 +46,7 @@ class Openrouter:
         )
 
     async def __chat_complete(self, dialog: Dialog) -> str:
+        self.stats.add_total_requests(1)
         completion = await self.client.chat.completions.create(
             model="deepseek/deepseek-r1:free",
             messages=dialog.messages
@@ -56,7 +57,6 @@ class Openrouter:
     async def __chat_complete_attempts(self, dialog: Dialog, attempts, timeout) -> str:
         rs = ''
         for attempt in range(attempts):
-            self.stats.add_total_requests(1)
             try:
                 rs = await self.__chat_complete(dialog)
             except Exception as e:
@@ -71,7 +71,9 @@ class Openrouter:
                 llm_logger.warning(f'Attempt get answer {attempt + 1}/{attempts} failed: Get empty response.')
 
         if not rs:
+            self.stats.add_failed_row_requests(1)
             llm_logger.error(f'All attempts ({attempts}) have failed!')
+
         return rs
 
     async def check_limits(self):

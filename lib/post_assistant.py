@@ -4,6 +4,8 @@ from lib.init import llm_task_content
 from telethon.tl.custom.message import Message
 import re
 
+from lib.stats import Stats
+
 
 class Post:
     def __init__(self, message: Message, brief_information='', meet_requirements=''):
@@ -21,9 +23,10 @@ class Post:
 
 
 class PostAssistant:
-    def __init__(self, llm_api: Openrouter):
+    def __init__(self, llm_api: Openrouter, stats: Stats):
         self.llm_api = llm_api
         self.previous_posts = []
+        self.stats = stats
 
     @staticmethod
     def parse_result(result: str) -> (bool, bool, str):
@@ -48,13 +51,11 @@ class PostAssistant:
             f'''New Post Content: "{post.message.text}"\nPrevious Posts Information: [{self.get_previous_posts_string()}]'''
         )
 
-        if stub_check:
-            success, meet_requirements, brief_information = True, True, "Summary"
-            post.fill_info(brief_information, meet_requirements, success)
-            asis_logger.info('Stub check enabled, use stub params')
-            return
-
         async def try_attempts():
+            if stub_check:
+                asis_logger.info('Stub check enabled, use stub params')
+                return True, True, "Summary"
+
             for attempt in range(attempts):
                 result = await self.llm_api.chat_complete(dialog)
 
@@ -73,4 +74,8 @@ class PostAssistant:
             return False, False, ''
 
         success, meet_requirements, brief_information = await try_attempts()
+        self.stats.add_total_posts(1)
+        if meet_requirements:
+            self.stats.add_chosen_posts(1)
+
         post.fill_info(brief_information, meet_requirements, success)
