@@ -12,27 +12,26 @@ class COLORS:
     WARNING = Fore.YELLOW
     ERROR = Fore.RED
     CRITICAL = Fore.LIGHTRED_EX
-    APP_NAME = Fore.MAGENTA
 
 
-def get_one_format(color, app_name):
-    return f"{Fore.LIGHTWHITE_EX}%(asctime)s - {COLORS.APP_NAME}{app_name}{Fore.LIGHTWHITE_EX} - {color}%(levelname)s{Fore.LIGHTWHITE_EX} - %(message)s{Fore.RESET}"
+def get_one_format(color, app_name, app_color):
+    return f"{Fore.LIGHTWHITE_EX}%(asctime)s - {app_color}{app_name}{Fore.LIGHTWHITE_EX} - {color}%(levelname)s{Fore.LIGHTWHITE_EX} - %(message)s{Fore.RESET}"
 
 
-def get_formats(app_name):
+def get_formats(app_name, app_color):
     return {
-        logging.DEBUG: get_one_format(COLORS.DEBUG, app_name),
-        logging.INFO: get_one_format(COLORS.INFO, app_name),
-        logging.WARNING: get_one_format(COLORS.WARNING, app_name),
-        logging.ERROR: get_one_format(COLORS.ERROR, app_name),
-        logging.CRITICAL: get_one_format(COLORS.CRITICAL, app_name),
+        logging.DEBUG: get_one_format(COLORS.DEBUG, app_name, app_color),
+        logging.INFO: get_one_format(COLORS.INFO, app_name, app_color),
+        logging.WARNING: get_one_format(COLORS.WARNING, app_name, app_color),
+        logging.ERROR: get_one_format(COLORS.ERROR, app_name, app_color),
+        logging.CRITICAL: get_one_format(COLORS.CRITICAL, app_name, app_color),
     }
 
 
 class ColoredFormatter(logging.Formatter):
-    def __init__(self, app_name):
+    def __init__(self, app_name, app_color):
         super().__init__()
-        self.formats = get_formats(app_name)
+        self.formats = get_formats(app_name, app_color)
 
     def format(self, record):
         log_fmt = self.formats.get(record.levelno)
@@ -62,6 +61,22 @@ class LogStream:
         file.name = 'logs.txt'
         return file
 
+    def get_divided_log(self, characters=2000):
+        divided_log = []
+        log = ''
+        cnt = 0
+        for line in self.logs:
+            cnt += len(line)
+            if cnt >= characters:
+                divided_log.append(log)
+                cnt = len(line)
+                log = line
+
+        if log:
+            divided_log.append(log)
+
+        return divided_log
+
     def __str__(self):
         return "".join(self.logs)
 
@@ -69,32 +84,34 @@ class LogStream:
         return bool(self.logs)
 
 
-def create_logger(name: str, app_name: str):
+def create_logger(name: str, app_name: str, logger_log_stream: LogStream, app_color: str):
     colorama.init()
 
     # Init logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
 
-    # Create custom stream
-    log_stream = LogStream()
-
     # Create handlers
     terminal_handler = logging.StreamHandler(sys.stdout)
-    log_stream_handler = logging.StreamHandler(log_stream)
+    log_stream_handler = logging.StreamHandler(logger_log_stream)
 
     # Set formatters
-    terminal_handler.setFormatter(ColoredFormatter(app_name))
+    terminal_handler.setFormatter(ColoredFormatter(app_name, app_color))
     log_stream_handler.setFormatter(PlainFormatter(app_name))
 
     # Add handlers
     logger.addHandler(terminal_handler)
     logger.addHandler(log_stream_handler)
 
-    return logger, log_stream
+    return logger
 
 
-logger, log_stream = create_logger('app', f'LOGGER')
+log_stream = LogStream()
+
+main_logger = create_logger('LOGGER', 'LOGGER', log_stream, Fore.MAGENTA)
+llm_logger = create_logger('LLM', 'LLM', log_stream, Fore.CYAN)
+asis_logger = create_logger('POST_ASSISTANT', 'POST ASSISTANT', log_stream, Fore.LIGHTMAGENTA_EX)
+workers_logger = create_logger('WORKERS', 'WORKERS', log_stream, Fore.LIGHTCYAN_EX)
 
 if __name__ == '__main__':
     pass

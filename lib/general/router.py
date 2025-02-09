@@ -11,20 +11,23 @@ class RouterError(Exception):
 
 
 class Handler:
-    def __init__(self, callback: Callable, name: str, filter: FilterType = None, middleware: Middleware = None):
+    def __init__(self, callback: Callable, name: str, filter: FilterType = None, middlewares: List[Middleware] = None):
         self.callback = callback
         self.filter = filter
         self.name = name
-        self.middleware = middleware
+        self.middlewares = middlewares if middlewares else []
 
 
 class Router:
-    def __init__(self, filter: Callable[[], FilterType] = None, middleware: Middleware = None):
+    def __init__(self, filter: Callable[[], FilterType] = None, middlewares: List[Middleware] = None):
         self.handlers: List[Handler] = []
         self.router_filter = filter
-        self.router_middleware = middleware
+        self.router_middleware = middlewares if middlewares else []
 
-    def __call__(self, filter: FilterType = None, middleware: Middleware = None, override_filter=False):
+    def __call__(self, filter: FilterType = None, middlewares: List[Middleware] = None, override_filter=False):
+        if middlewares is None:
+            middlewares = []
+
         def wrapper(callback: Callable):
             handler_filter = filter
 
@@ -34,24 +37,31 @@ class Router:
                 else:
                     handler_filter = self.router_filter()
 
-            handler = Handler(callback, callback.__name__, handler_filter, middleware)
+            handler = Handler(callback, callback.__name__, handler_filter, [*self.router_middleware, *middlewares])
             handler_filter.setup(handler)
             self.handlers.append(handler)
             return callback
 
         return wrapper
 
+    @staticmethod
+    async def run_middlewares(handler: Handler, event: Event, db: Database):
+        passed, kwargs = True, {}
+        for middleware in handler.middlewares:
+            cur_passed, cur_kwargs = await middleware(event, db)
+            passed = passed and cur_passed
+            kwargs.update(cur_kwargs)
+
+            if not passed:
+                return False, kwargs
+
+        return True, kwargs
+
     def get_dispatcher(self, db: Database):
         async def dispatch(event: Event):
             for handler in self.handlers:
-                if handler.filter is None or await handler.filter(event):
-                    passed, kwargs = True, {}
-                    if self.router_middleware:
-                        passed, kwargs = await self.router_middleware(event)
-                    if handler.middleware:
-                        passed2, kwargs2 = await handler.middleware(event)
-                        passed = passed and passed2
-                        kwargs.update(kwargs2)
+                if handler.filter is None or await handler.filter(event, db):
+                    passed, kwargs = await self.run_middlewares(handler, event, db)
 
                     if passed:
                         await handler.callback(event, db, **kwargs)

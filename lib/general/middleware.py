@@ -1,16 +1,19 @@
 import abc
 from typing import Dict, Any, List, Tuple
+
+from lib.database import Database
 from lib.general.events import Event
+from lib.logger import main_logger
 
 
 class Middleware(abc.ABC):
     @abc.abstractmethod
-    async def __call__(self, event: Event) -> Tuple[bool, Dict[str, Any]]:
+    async def __call__(self, event: Event, db: Database) -> Tuple[bool, Dict[str, Any]]:
         pass
 
 
 class CommandMiddleware(Middleware):
-    async def __call__(self, event: Event) -> Tuple[bool, Dict[str, Any]]:
+    async def __call__(self, event: Event, db: Database) -> Tuple[bool, Dict[str, Any]]:
         text = event.message.text
         space_pos = text.find(' ')
         if space_pos == -1 or space_pos == len(text) - 1:
@@ -20,12 +23,13 @@ class CommandMiddleware(Middleware):
 
 
 class AccessMiddleware(Middleware):
-    def __init__(self, usernames: List[str] = None):
-        self.usernames = usernames
+    def __init__(self, add_admins=True, usernames: List[str] = None):
+        self.usernames = usernames if usernames else []
 
-    async def __call__(self, event: Event) -> Tuple[bool, Dict[str, Any]]:
+    async def __call__(self, event: Event, db: Database) -> Tuple[bool, Dict[str, Any]]:
         username = (await event.get_chat()).username
-        if self.usernames and username not in self.usernames:
+        if username not in [*self.usernames, *db.admins]:
+            main_logger.warning(f"From user '{username}' message '{event.message.text}'")
             await event.respond('Не достоин')
             return False, {}
         return True, {}

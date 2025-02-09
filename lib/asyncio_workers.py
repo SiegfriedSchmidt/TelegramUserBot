@@ -1,5 +1,5 @@
 import asyncio
-from lib.logger import logger
+from lib.logger import workers_logger
 
 
 class AsyncioWorkers:
@@ -16,10 +16,10 @@ class AsyncioWorkers:
     async def __worker(self, worker_id: int):
         while True:
             future, func, args, kwargs = await self.queue.get()
-            logger.info(f'Worker {worker_id} received a task.')
+            workers_logger.info(f'Worker {worker_id} received a task.')
             try:
                 future.set_result(await func(*args, **kwargs))
-                logger.info(f'Worker {worker_id} completed a task.')
+                workers_logger.info(f'Worker {worker_id} completed a task.')
             except Exception as e:
                 future.set_exception(e)
             finally:

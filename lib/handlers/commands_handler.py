@@ -1,4 +1,5 @@
-from lib.config_reader import config
+import asyncio
+
 from lib.database import Database
 
 from lib.general.filters import Channel, Chat, Command, FilterType
@@ -6,10 +7,12 @@ from lib.general.events import Event
 from lib.general.middleware import CommandMiddleware, AccessMiddleware
 from lib.general.router import Router
 from lib.llm import Dialog
-from lib.logger import log_stream
+from lib.logger import log_stream, main_logger
 from lib.init import llm_task_content
+from lib.post_assistant import Post
+from lib.utils.telethon_utils import send_post
 
-router = Router(lambda: Chat() & Command(), AccessMiddleware([config.telegram_admin.get_secret_value()]))
+router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
 
 
 @router()
@@ -38,7 +41,12 @@ async def logs_file(event: Event, db: Database):
 
 @router()
 async def logs(event: Event, db: Database):
-    await event.respond(str(log_stream) if log_stream else 'Nothing.')
+    if not log_stream:
+        await event.respond('Nothing.')
+
+    for block in log_stream.get_divided_log():
+        await event.respond(block)
+        await asyncio.sleep(1)
 
 
 @router()
@@ -46,25 +54,82 @@ async def limits(event: Event, db: Database):
     await event.respond(await db.openrouter.check_limits())
 
 
-@router(middleware=CommandMiddleware())
+@router(middlewares=[CommandMiddleware()])
 async def ask(event: Event, db: Database, arg):
     dialog = Dialog()
     dialog.add_user_message(arg)
+    await event.respond("Question received.")
+    main_logger.info(f'/ask {arg}')
+
     result = await db.openrouter.chat_complete(dialog, attempts=1)
-    await event.respond(result if result else "Nothing.")
+    if not result:
+        return await event.respond("Nothing.")
+
+    dialog.add_assistant_message(result)
+    main_logger.info(f'Answered question:\n{str(dialog)}')
+    await event.respond(result)
 
 
 @router()
-async def watch(event: Event, db: Database):
+async def posting(event: Event, db: Database):
     db.is_posting = not db.is_posting
     await event.respond("Posting enabled." if db.is_posting else "Posting disabled.")
 
 
 @router()
+async def pending_posting(event: Event, db: Database):
+    db.is_pending_posting = not db.is_pending_posting
+    await event.respond("Pending posting enabled." if db.is_pending_posting else "Pending posting disabled.")
+
+
+@router()
+async def night_posting(event: Event, db: Database):
+    db.is_night_posting = not db.is_night_posting
+    await event.respond("Night posting enabled." if db.is_night_posting else "Night posting disabled.")
+
+
+@router()
+async def count_pending_posts(event: Event, db: Database):
+    await event.respond(f"{len(db.pending_posts)}")
+
+
+@router()
+async def send_pending_posts(event: Event, db: Database):
+    if len(db.pending_posts) == 0:
+        return await event.respond("No pending posts.")
+
+    await event.respond(f"Run worker with '{len(db.pending_posts)}' tasks.")
+
+    async def send_post_with_waiting(db: Database, post: Post, waiting=10):
+        await send_post(db, post)
+        await asyncio.sleep(waiting)
+
+    for post in db.pending_posts:
+        db.asyncio_workers.enqueue_task(send_post_with_waiting, db, post)
+
+    db.pending_posts.clear()
+
+
+@router()
 async def get_requests(event: Event, db: Database):
-    await event.respond(
-        f"Number of requests {db.openrouter.successful_requests}/{db.openrouter.total_requests} (successful/total)."
-    )
+    await event.respond(f"Number of requests {db.stats.get_requests()}.")
+
+
+@router()
+async def get_posts(event: Event, db: Database):
+    await event.respond(f"Number of posts {db.stats.get_posts()}.")
+
+
+@router()
+async def reset_stats(event: Event, db: Database):
+    db.stats.reset()
+    await event.respond(f"Statistics reset.")
+
+
+@router()
+async def reset_previous_posts(event: Event, db: Database):
+    db.post_assistant.previous_posts = []
+    await event.respond(f"Previous posts reset.")
 
 
 @router()
