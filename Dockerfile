@@ -1,4 +1,4 @@
-FROM python:3.10.9-slim AS builder
+FROM python:3.13.2-slim AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
 COPY requirements.txt .
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
-FROM python:3.10.9-slim
+FROM python:3.13.2-slim
 
 WORKDIR /app
 
