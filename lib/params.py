@@ -28,7 +28,7 @@ class Params:
         self.is_night_posting = False
         self.is_pending_posting = True
         self.stub_posting_check = False
-        self.night_interval = (time(23, 0), time(14, 0))
+        self.night_interval = (time(23, 0), time(8, 0))
         self.pending_posts: List[Post] = []
         self.keys = Keys(openrouter_api_keys)
 

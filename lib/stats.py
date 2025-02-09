@@ -7,7 +7,7 @@ class Stats:
         self.__chosen_posts = 0
 
     def get_requests(self):
-        return f"successful: {self.__successful_requests}\nfailed requests in a row: {self.__failed_row_requests}\ntotal requests: {self.__total_requests}"
+        return f"requests: {self.__successful_requests}/{self.__total_requests} (successful/total)\nfailed requests in a row: {self.__failed_row_requests}"
 
     def add_total_requests(self, count: int):
         self.__total_requests += count
@@ -19,7 +19,7 @@ class Stats:
         self.__successful_requests += count
 
     def get_posts(self):
-        return f"{self.__chosen_posts}/{self.__total_posts} (chosen/total)"
+        return f"posts: {self.__chosen_posts}/{self.__total_posts} (chosen/total)"
 
     def add_total_posts(self, count: int):
         self.__total_posts += count
