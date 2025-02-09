@@ -1,5 +1,7 @@
 import asyncio
 import signal
+import time
+
 import nest_asyncio
 from telethon import events
 
@@ -17,7 +19,6 @@ def on_shutdown(db: Database, sig=0):
     if sig != 0:
         signal_name = "SIGINT" if sig == signal.SIGINT else "SIGTERM"
         main_logger.info(f"Program interrupted and terminated by signal {signal_name}.")
-    asyncio.run(notify(db, 'Bot stopped.', log=True))
     asyncio.run(db.shutdown())
     exit(0)
 

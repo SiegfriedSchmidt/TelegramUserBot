@@ -70,7 +70,7 @@ class LogStream:
             if cnt >= characters:
                 divided_log.append(log)
                 cnt = len(line)
-                log = line
+            log += line
 
         if log:
             divided_log.append(log)
