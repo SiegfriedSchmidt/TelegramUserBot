@@ -4,7 +4,6 @@ import re
 import aiohttp
 
 from lib.asyncio_workers import AsyncioWorkers
-from lib.post_assistant import PostAssistant
 from lib.stats import Stats
 from lib.logger import llm_logger, asis_logger
 from lib.init import llm_task_content
@@ -98,6 +97,7 @@ class Openrouter:
 if __name__ == '__main__':
     from config_reader import config
     from asyncio_workers import AsyncioWorkers
+    from lib.post_assistant import PostAssistant, Post
 
 
     async def main():
@@ -107,16 +107,16 @@ if __name__ == '__main__':
         print(await openrouter.check_limits())
         post_assistant = PostAssistant(llm_api=openrouter)
         await openrouter.workers.start(1)
-        await post_assistant.check_channel_message(
-            '''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.
 
-    • Пишем нужный промпт
-    • Выбираем стиль и качество (стандарт/высокое)
-    • Скачиваем ГОТОВОЕ лого в нужном формате
 
-    Фрилансеры уже потирают ручки ''',
-        )
-
+    #     post = Post('''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.
+    #
+    # • Пишем нужный промпт
+    # • Выбираем стиль и качество (стандарт/высокое)
+    # • Скачиваем ГОТОВОЕ лого в нужном формате
+    #
+    # Фрилансеры уже потирают ручки ''')
+    #     await post_assistant.check_channel_message(post)
 
     #     print(llm_task_content)
     #

@@ -14,7 +14,7 @@ class Database:
     def __init__(self):
         self.admins = [config.telegram_admin.get_secret_value()]
         self.neural_networks_channel = int(config.telegram_channel.get_secret_value())
-        self.is_posting = False
+        self.is_posting = True
         self.is_night_posting = False
         self.is_pending_posting = True
         self.pending_posts: List[Post] = []
