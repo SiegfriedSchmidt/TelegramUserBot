@@ -6,6 +6,7 @@ from lib.params import Params
 from lib.post_assistant import PostAssistant
 from lib.init import telegram_session_path
 from lib.stats import Stats
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 class Database:
@@ -14,6 +15,7 @@ class Database:
         self.neural_networks_channel = int(config.telegram_channel.get_secret_value())
 
         self.asyncio_workers = AsyncioWorkers()
+        self.scheduler = AsyncIOScheduler()
         self.params = Params(config.openrouter_api_keys)
         self.stats = Stats()
         self.openrouter = Openrouter(self.params.keys.get_key(), self.asyncio_workers, self.stats)

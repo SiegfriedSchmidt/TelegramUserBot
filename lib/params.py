@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, datetime
 from typing import List
 from pydantic import SecretStr
 from lib.post_assistant import Post
@@ -28,7 +28,8 @@ class Params:
         self.is_night_posting = False
         self.is_pending_posting = True
         self.stub_posting_check = False
-        self.night_interval = (time(23, 0), time(8, 0))
+        self.start_time = datetime.now()
+        self.night_interval = (time(23, 0), time(10, 0))
         self.pending_posts: List[Post] = []
         self.keys = Keys(openrouter_api_keys)
 
@@ -39,5 +40,10 @@ class Params:
                 string += f'{key}: {val}\n'
             if isinstance(val, list) or isinstance(val, Keys):
                 string += f'{key}: {len(val)}\n'
+            if isinstance(val, datetime):
+                string += f'{key}: {val.isoformat()}\n'
+
+        cur_time = datetime.now()
+        string += f'Uptime: {(cur_time - self.start_time).days} days\n'
 
         return string

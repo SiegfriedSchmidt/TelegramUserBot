@@ -61,22 +61,6 @@ class LogStream:
         file.name = 'logs.txt'
         return file
 
-    def get_divided_log(self, characters=2000):
-        divided_log = []
-        log = ''
-        cnt = 0
-        for line in self.logs:
-            cnt += len(line)
-            if cnt >= characters:
-                divided_log.append(log)
-                cnt = len(line)
-            log += line
-
-        if log:
-            divided_log.append(log)
-
-        return divided_log
-
     def __str__(self):
         return "".join(self.logs)
 

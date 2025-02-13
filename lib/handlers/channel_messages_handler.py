@@ -8,7 +8,7 @@ from lib.utils.check_time_interval import is_night
 from lib.utils.get_exception import get_exception
 from lib.utils.telethon_utils import send_post
 
-router = Router(lambda: Channel(exclude_networks_channel=False))
+router = Router(lambda: Channel(exclude_networks_channel=True))
 
 
 async def check_posting(db: Database):

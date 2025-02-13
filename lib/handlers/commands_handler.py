@@ -10,7 +10,7 @@ from lib.llm import Dialog
 from lib.logger import log_stream, main_logger
 from lib.init import llm_task_content
 from lib.post_assistant import Post
-from lib.utils.telethon_utils import send_post
+from lib.utils.telethon_utils import send_post, large_respond, send_pending_posts
 
 router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
 
@@ -22,7 +22,7 @@ async def help(event: Event, db: Database):
 
 @router()
 async def previous_posts(event: Event, db: Database):
-    await event.respond(f'[{db.post_assistant.get_previous_posts_string()}]')
+    await large_respond(event, f'[{db.post_assistant.get_previous_posts_string()}]')
 
 
 @router()
@@ -41,12 +41,7 @@ async def logs_file(event: Event, db: Database):
 
 @router()
 async def logs(event: Event, db: Database):
-    if not log_stream:
-        await event.respond('Nothing.')
-
-    for block in log_stream.get_divided_log():
-        await event.respond(block)
-        await asyncio.sleep(1)
+    await large_respond(event, str(log_stream))
 
 
 @router()
@@ -102,24 +97,12 @@ async def info(event: Event, db: Database):
 
 
 @router()
-async def send_pending_posts(event: Event, db: Database):
+async def send_pending(event: Event, db: Database):
     if len(db.params.pending_posts) == 0:
         return await event.respond("No pending posts.")
 
-    count = len(db.params.pending_posts)
-
-    await event.respond(f"Run worker with '{count}' tasks.")
-    main_logger.info(f"Forward pending posts '{count}'")
-
-    async def send_post_with_waiting(db: Database, post: Post, last: bool, waiting=10):
-        await send_post(db, post)
-        if not last:
-            await asyncio.sleep(waiting)
-
-    for idx, post in enumerate(db.params.pending_posts):
-        await db.asyncio_workers.enqueue_task(send_post_with_waiting, db, post, idx == count - 1)
-
-    db.params.pending_posts.clear()
+    await event.respond(f"Run worker with '{len(db.params.pending_posts)}' tasks.")
+    await send_pending_posts(db)
     await event.respond(f"Pending posts successfully sent.")
 
 
@@ -131,7 +114,7 @@ async def reset_stats(event: Event, db: Database):
 
 @router()
 async def reset_previous_posts(event: Event, db: Database):
-    db.post_assistant.previous_posts = []
+    db.post_assistant.previous_posts.clear()
     await event.respond(f"Previous posts reset.")
 
 
