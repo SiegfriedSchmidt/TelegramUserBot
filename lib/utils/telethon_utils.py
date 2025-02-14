@@ -46,10 +46,12 @@ async def send_pending_posts(db: Database):
     db.params.pending_posts.clear()
 
 
-async def large_respond(event: Event, obj: str | List[str], characters=2000, timeout=3):
+async def large_respond(event: Event, obj: str | List[str], characters=2000, timeout=3, maximum=4):
     if not obj:
         await event.respond("Nothing.")
     elif isinstance(obj, str):
+        if len(obj) >= maximum * 4:
+            return await event.respond("Too large.")
         for i in range(0, len(obj), characters):
             await event.respond(obj[i:i + characters])
             await asyncio.sleep(timeout)
@@ -68,6 +70,9 @@ async def large_respond(event: Event, obj: str | List[str], characters=2000, tim
 
         if log:
             divided_message.append(log)
+
+        if len(divided_message) >= maximum:
+            return await event.respond("Too large.")
 
         for message in divided_message:
             await event.respond(message)
