@@ -36,8 +36,8 @@ def setup_signal_handlers(db: Database):
 
 
 async def every_day_function(db: Database):
-    await main_logger.info("Every day function triggered.")
-    await db.post_assistant.previous_posts.clear()
+    main_logger.info("Every day function triggered.")
+    db.post_assistant.previous_posts.clear()
     await send_pending_posts(db)
 
 

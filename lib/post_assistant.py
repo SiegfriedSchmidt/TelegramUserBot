@@ -70,7 +70,7 @@ class PostAssistant:
                 else:
                     asis_logger.warning(f"Attempt parse the result string {attempt + 1}/{attempts} failed: {result}")
 
-            asis_logger.error(f"All attempts ({attempts}) to parse the result string ave failed!")
+            asis_logger.error(f"All attempts ({attempts}) to parse the result string have failed!")
             return False, False, ''
 
         success, meet_requirements, brief_information = await try_attempts()

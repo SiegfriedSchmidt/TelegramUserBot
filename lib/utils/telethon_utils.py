@@ -50,7 +50,7 @@ async def large_respond(event: Event, obj: str | List[str], characters=2000, tim
     if not obj:
         await event.respond("Nothing.")
     elif isinstance(obj, str):
-        if len(obj) >= maximum * 4:
+        if len(obj) >= characters * 4:
             return await event.respond("Too large.")
         for i in range(0, len(obj), characters):
             await event.respond(obj[i:i + characters])

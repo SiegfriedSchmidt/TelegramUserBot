@@ -41,7 +41,7 @@ async def logs_file(event: Event, db: Database):
 
 @router()
 async def logs(event: Event, db: Database):
-    await large_respond(event, str(log_stream))
+    await large_respond(event, log_stream.logs)
 
 
 @router()
