@@ -23,7 +23,7 @@ class CommandMiddleware(Middleware):
 
 
 class AccessMiddleware(Middleware):
-    def __init__(self, add_admins=True, usernames: List[str] = None):
+    def __init__(self, usernames: List[str] = None, add_admins=True):
         self.usernames = usernames if usernames else []
 
     async def __call__(self, event: Event, db: Database) -> Tuple[bool, Dict[str, Any]]:

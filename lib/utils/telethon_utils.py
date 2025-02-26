@@ -28,6 +28,19 @@ async def send_post(db: Database, post: Post):
     )
 
 
+async def get_messages(db: Database, channel_name: str, count: int):
+    channel = await db.client.get_entity(channel_name)
+    idx = 0
+    messages = []
+    async for message in db.client.iter_messages(channel):
+        messages.append(message.text)
+        idx += 1
+        if idx == count:
+            break
+
+    return messages
+
+
 async def send_pending_posts(db: Database):
     count = len(db.params.pending_posts)
     if count == 0:
@@ -46,7 +59,7 @@ async def send_pending_posts(db: Database):
     db.params.pending_posts.clear()
 
 
-async def large_respond(event: Event, obj: str | List[str], characters=2000, timeout=3, maximum=4):
+async def large_respond(event: Event, obj: str | List[str], timeout=3, characters=2000, maximum=4):
     if not obj:
         await event.respond("Nothing.")
     elif isinstance(obj, str):

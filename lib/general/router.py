@@ -22,14 +22,13 @@ class Router:
     def __init__(self, filter: Callable[[], FilterType] = None, middlewares: List[Middleware] = None):
         self.handlers: List[Handler] = []
         self.router_filter = filter
-        self.router_middleware = middlewares if middlewares else []
+        self.router_middlewares = middlewares if middlewares else []
 
-    def __call__(self, filter: FilterType = None, middlewares: List[Middleware] = None, override_filter=False):
-        if middlewares is None:
-            middlewares = []
-
+    def __call__(self, filter: FilterType = None, middlewares: List[Middleware] = None, override_filter=False,
+                 override_middleware=False):
         def wrapper(callback: Callable):
             handler_filter = filter
+            handler_middlewares = middlewares
 
             if self.router_filter and not override_filter:
                 if handler_filter:
@@ -37,7 +36,13 @@ class Router:
                 else:
                     handler_filter = self.router_filter()
 
-            handler = Handler(callback, callback.__name__, handler_filter, [*self.router_middleware, *middlewares])
+            if self.router_middlewares and not override_middleware:
+                if handler_middlewares:
+                    handler_middlewares.extend(self.router_middlewares)
+                else:
+                    handler_middlewares = self.router_middlewares
+
+            handler = Handler(callback, callback.__name__, handler_filter, handler_middlewares)
             handler_filter.setup(handler)
             self.handlers.append(handler)
             return callback

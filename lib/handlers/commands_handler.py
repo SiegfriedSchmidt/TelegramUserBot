@@ -1,4 +1,5 @@
 import asyncio
+from typing import Tuple
 
 from lib.database import Database
 
@@ -10,7 +11,7 @@ from lib.llm import Dialog
 from lib.logger import log_stream, main_logger
 from lib.init import llm_task_content
 from lib.post_assistant import Post
-from lib.utils.telethon_utils import send_post, large_respond, send_pending_posts
+from lib.utils.telethon_utils import large_respond, send_pending_posts, get_messages
 
 router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
 
@@ -128,6 +129,17 @@ async def rotate_keys(event: Event, db: Database):
     db.params.keys.rotate_keys()
     db.openrouter.api_key = db.params.keys.get_key()
     await event.respond(f"Current key {db.params.keys.get_key_number()}")
+
+
+@router(middlewares=[CommandMiddleware(), AccessMiddleware(["olgagorla"])], override_middleware=True)
+async def messages(event: Event, db: Database, arg):
+    count = int(arg) if arg and arg.isdigit() else 3
+    for message in await get_messages(db, "@petrovchanka_lera", count):
+        if not message:
+            continue
+
+        await event.respond(message)
+        await asyncio.sleep(5)
 
 
 @router(filter=Command('/'), override_filter=True)
