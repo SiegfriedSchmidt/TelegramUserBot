@@ -22,10 +22,11 @@ async def join_channel(db: Database, channel_id: str):
 
 async def send_post(db: Database, post: Post):
     await db.client.forward_messages(db.neural_networks_channel, post.message)
-    await db.client.send_message(
-        db.neural_networks_channel,
-        f'Summary of the previous post: {post.brief_information}'
-    )
+    # TODO: add summary in the end of the day
+    # await db.client.send_message(
+    #     db.neural_networks_channel,
+    #     f'Summary of the previous post: {post.brief_information}'
+    # )
 
 
 async def get_messages(db: Database, channel_name: str, count: int):
