@@ -35,8 +35,10 @@ class Dialog:
         return str_dialog
 
 
+# deepseek/deepseek-r1:free
+# openrouter/cypher-alpha:free
 class Openrouter:
-    def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats, model="deepseek/deepseek-r1:free"):
+    def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats, model="openrouter/cypher-alpha:free"):
         self.api_key = api_key.get_secret_value()
         self.workers = workers
         self.stats = stats
@@ -49,7 +51,7 @@ class Openrouter:
     async def __chat_complete(self, dialog: Dialog) -> str:
         self.stats.add_total_requests(1)
         completion = await self.client.chat.completions.create(
-            model="deepseek/deepseek-r1:free",
+            model=self.model,
             messages=dialog.messages
         )
 
@@ -94,6 +96,9 @@ class Openrouter:
         if result:
             self.stats.add_successful_requests(1)
         return result
+
+    def __str__(self):
+        return f'model: {self.model}\napi_key: {self.api_key[0:15]}.....{self.api_key[-5:]}\n'
 
 
 if __name__ == '__main__':

@@ -94,7 +94,7 @@ async def night_posting(event: Event, db: Database):
 
 @router()
 async def info(event: Event, db: Database):
-    await event.respond(f"Stats:\n{db.stats}\nParams:\n{db.params}")
+    await event.respond(f"Stats:\n{db.stats}\nParams:\n{db.params}\nApi:\n{db.openrouter}")
 
 
 @router()
@@ -134,12 +134,14 @@ async def rotate_keys(event: Event, db: Database):
 @router(middlewares=[CommandMiddleware(), AccessMiddleware(["olgagorla"])], override_middleware=True)
 async def messages(event: Event, db: Database, arg):
     count = int(arg) if arg and arg.isdigit() else 3
+    main_logger.info(f'/messages {count} started.')
     for message in await get_messages(db, "@petrovchanka_lera", count):
         if not message:
             continue
 
         await event.respond(message)
         await asyncio.sleep(5)
+    main_logger.info(f'/messages {count} finished.')
 
 
 @router(filter=Command('/'), override_filter=True)

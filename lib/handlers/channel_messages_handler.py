@@ -11,6 +11,8 @@ from lib.utils.telethon_utils import send_post
 router = Router(lambda: Channel(exclude_networks_channel=True))
 
 
+# TODO: Collect users statistic (likes, view)
+
 async def check_posting(db: Database):
     if not db.params.is_night_posting and is_night(db):
         main_logger.info(f"At night we don't posting!")
@@ -38,6 +40,7 @@ async def my_event_handler(event: Event, db: Database):
             return
 
         post = Post(event.message)
+        # TODO: Worker should also add post to previous posts. (without it two similar posts received at the same time will pass the requirements)
         await db.post_assistant.check_channel_message(post, db.params.stub_posting_check)
         if not post.successfully_checked:
             main_logger.error(f"Post assistant failed accomplish task.")
@@ -48,6 +51,7 @@ async def my_event_handler(event: Event, db: Database):
                 if not posting:
                     if db.params.is_pending_posting:
                         main_logger.info("Pending posting enabled, saving post for the future.")
+                        # TODO: remove pending posts, use telegram timed messages
                         db.params.pending_posts.append(post)
                     return
 

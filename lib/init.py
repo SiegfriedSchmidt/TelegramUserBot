@@ -19,9 +19,12 @@ New Post Content: The full text of the new post to be evaluated.
 Previous Posts Information: A brief summary or list of previous posts' key points. (This may be an empty list, e.g., [].)
 
 Requirements for the New Post:
-Content Requirement: The post must include interesting information about neural networks or AI.
-NSFW Requirement: The post must not contain any NSFW (Not Safe For Work) content.
-Originality Requirement: The post must not include information that has already been covered in the previous posts.
+1. The post should be about neural networks and AI
+2. The post must not contain any NSFW (Not Safe For Work) content.
+3. Any political posts are strictly prohibited.
+4. The post must not include information that has already been covered in the previous posts.
+5. The post may contain an advertisement, but it must not be an advertisement in itself.
+6. If you are not sure that you meet the requirements, answer that you do not meet them.
 
 Output Instructions:
 Your response must include the following two pieces of information:

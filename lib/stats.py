@@ -31,4 +31,4 @@ class Stats:
         self.__class__.__init__(self)
 
     def __str__(self):
-        return f'{self.get_requests()}\n{self.get_posts()}'
+        return f'{self.get_requests()}\n{self.get_posts()}\n'
