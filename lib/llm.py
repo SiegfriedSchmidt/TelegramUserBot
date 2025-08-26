@@ -37,8 +37,9 @@ class Dialog:
 
 # deepseek/deepseek-r1:free
 # openrouter/cypher-alpha:free
+# deepseek/deepseek-r1-0528:free
 class Openrouter:
-    def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats, model="openrouter/cypher-alpha:free"):
+    def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats, model="deepseek/deepseek-r1-0528:free"):
         self.api_key = api_key.get_secret_value()
         self.workers = workers
         self.stats = stats

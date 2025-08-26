@@ -2,6 +2,7 @@ from io import BytesIO
 from typing import List
 import colorama
 from colorama import Fore
+from collections import deque
 import logging
 import sys
 
@@ -47,7 +48,7 @@ class PlainFormatter(logging.Formatter):
 
 class LogStream:
     def __init__(self):
-        self.logs: List[str] = []
+        self.logs: deque[str] = deque(maxlen=1000)
 
     def write(self, string: str):
         if string.strip():

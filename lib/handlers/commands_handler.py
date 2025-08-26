@@ -1,5 +1,4 @@
 import asyncio
-from typing import Tuple
 
 from lib.database import Database
 
@@ -9,9 +8,8 @@ from lib.general.middleware import CommandMiddleware, AccessMiddleware
 from lib.general.router import Router
 from lib.llm import Dialog
 from lib.logger import log_stream, main_logger
-from lib.init import llm_task_content
-from lib.post_assistant import Post
-from lib.utils.telethon_utils import large_respond, send_pending_posts, get_messages
+from lib.init import llm_post_task_content
+from lib.utils.telethon_utils import large_respond, get_messages
 
 router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
 
@@ -73,20 +71,6 @@ async def posting(event: Event, db: Database):
 
 
 @router()
-async def pending_posting(event: Event, db: Database):
-    db.params.is_pending_posting = not db.params.is_pending_posting
-    await event.respond("Pending posting enabled." if db.params.is_pending_posting else "Pending posting disabled.")
-
-
-@router()
-async def stub_posting_check(event: Event, db: Database):
-    db.params.stub_posting_check = not db.params.stub_posting_check
-    await event.respond(
-        "Stub posting check enabled." if db.params.stub_posting_check else "Stub posting check disabled."
-    )
-
-
-@router()
 async def night_posting(event: Event, db: Database):
     db.params.is_night_posting = not db.params.is_night_posting
     await event.respond("Night posting enabled." if db.params.is_night_posting else "Night posting disabled.")
@@ -98,30 +82,14 @@ async def info(event: Event, db: Database):
 
 
 @router()
-async def send_pending(event: Event, db: Database):
-    if len(db.params.pending_posts) == 0:
-        return await event.respond("No pending posts.")
-
-    await event.respond(f"Run worker with '{len(db.params.pending_posts)}' tasks.")
-    await send_pending_posts(db)
-    await event.respond(f"Pending posts successfully sent.")
-
-
-@router()
 async def reset_stats(event: Event, db: Database):
     db.stats.reset()
     await event.respond(f"Statistics reset.")
 
 
 @router()
-async def reset_previous_posts(event: Event, db: Database):
-    db.post_assistant.previous_posts.clear()
-    await event.respond(f"Previous posts reset.")
-
-
-@router()
 async def get_task_prompt(event: Event, db: Database):
-    await event.respond(llm_task_content)
+    await event.respond(llm_post_task_content)
 
 
 @router()

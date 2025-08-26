@@ -1,14 +1,15 @@
 import asyncio
 import signal
-import time
 import nest_asyncio
 
 from apscheduler.triggers.cron import CronTrigger
 from telethon import events
 
+from lib.init import llm_summary_task
+from lib.llm import Dialog
 from lib.logger import main_logger
 from lib.database import Database
-from lib.utils.telethon_utils import notify, send_pending_posts
+from lib.utils.telethon_utils import notify
 
 from lib.handlers import commands_handler, channel_messages_handler
 from lib.utils.get_exception import get_exception
@@ -35,10 +36,18 @@ def setup_signal_handlers(db: Database):
         loop.add_signal_handler(sig, on_shutdown, db, sig)
 
 
-async def every_day_function(db: Database):
+async def on_day_start(db: Database):
     main_logger.info("Every day function triggered.")
     db.post_assistant.previous_posts.clear()
-    await send_pending_posts(db)
+
+
+async def on_day_end(db: Database):
+    dialog = Dialog()
+    dialog.add_user_message(llm_summary_task)
+    dialog.add_user_message(f'Previous Posts Information: [{db.post_assistant.get_previous_posts_string()}]')
+    result = await db.post_assistant.llm_api.chat_complete(dialog)
+    await db.client.send_message(db.neural_networks_channel, result + '[сообщение сгенерировано автоматически]')
+    main_logger.info("Day end function triggered.")
 
 
 async def main():
@@ -51,8 +60,12 @@ async def main():
         await on_start(db)
 
         # Scheduler
+        trigger = CronTrigger(hour=db.params.night_interval[0].hour, minute=db.params.night_interval[0].minute)
+        db.scheduler.add_job(on_day_end, trigger, args=(db,))
+
         trigger = CronTrigger(hour=db.params.night_interval[1].hour, minute=db.params.night_interval[1].minute)
-        db.scheduler.add_job(every_day_function, trigger, args=(db,))
+        db.scheduler.add_job(on_day_start, trigger, args=(db,))
+
         db.scheduler.start()
 
         # Events

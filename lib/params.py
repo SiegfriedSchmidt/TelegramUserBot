@@ -26,11 +26,8 @@ class Params:
     def __init__(self, openrouter_api_keys: List[SecretStr]):
         self.is_posting = True
         self.is_night_posting = False
-        self.is_pending_posting = True
-        self.stub_posting_check = False
         self.start_time = datetime.now()
         self.night_interval = (time(23, 0), time(10, 0))
-        self.pending_posts: List[Post] = []
         self.keys = Keys(openrouter_api_keys)
 
     def __str__(self):

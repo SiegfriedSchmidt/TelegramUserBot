@@ -11,12 +11,12 @@ if str(secret_folder_path) == '.':
 
 telegram_session_path = secret_folder_path / 'telegram_user.session'
 
-llm_task_content = '''Task:
+llm_post_task_content = '''Task:
 You are an assistant that evaluates Telegram posts to determine if they meet specific requirements.
 
 Inputs:
 New Post Content: The full text of the new post to be evaluated.
-Previous Posts Information: A brief summary or list of previous posts' key points. (This may be an empty list, e.g., [].)
+Previous Posts Information: A brief summary or list of previous posts key points. (This may be an empty list, e.g., [].)
 
 Requirements for the New Post:
 1. The post should be about neural networks and AI
@@ -34,6 +34,19 @@ Brief information: A concise summary or extraction of the key information in the
 Output Format:
 Meet the requirements: "True/False"
 Brief information: "brief info about post"
+'''
+
+llm_summary_task = '''Task:
+You are an assistant that creates summary of Telegram posts
+
+Inputs:
+Previous Posts Information: A brief summary or list of previous posts key points. (This may be an empty list, e.g., [].)
+
+Output Instructions:
+Your response must include the summary of the previous posts key points in russian language.
+
+Output Format:
+just output text of the summary without preface
 '''
 
 test_previous_posts = [

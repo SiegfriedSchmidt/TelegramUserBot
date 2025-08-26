@@ -1,6 +1,6 @@
 from lib.llm import Openrouter, Dialog
 from lib.logger import asis_logger
-from lib.init import llm_task_content
+from lib.init import llm_post_task_content
 from telethon.tl.custom.message import Message
 import re
 
@@ -46,7 +46,7 @@ class PostAssistant:
     async def check_channel_message(self, post: Post, stub_check=False, attempts=3):
         asis_logger.info("Start checking new post message...")
         dialog = Dialog()
-        dialog.add_user_message(llm_task_content)
+        dialog.add_user_message(llm_post_task_content)
         dialog.add_user_message(
             f'''New Post Content: "{post.message.text}"\nPrevious Posts Information: [{self.get_previous_posts_string()}]'''
         )

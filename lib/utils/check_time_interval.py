@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 from lib.database import Database
 
@@ -16,3 +16,14 @@ def check_time_interval(start_time, end_time):
 
 def is_night(db: Database):
     return check_time_interval(*db.params.night_interval)
+
+
+def next_datetime_from_time(target_time: time) -> datetime:
+    now = datetime.now()
+    candidate = datetime.combine(now.date(), target_time)
+
+    # if that time has already passed today, shift to tomorrow
+    if candidate <= now:
+        candidate += timedelta(days=1)
+
+    return candidate

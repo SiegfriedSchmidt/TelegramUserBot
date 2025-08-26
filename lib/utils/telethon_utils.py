@@ -20,13 +20,8 @@ async def join_channel(db: Database, channel_id: str):
     main_logger.info(f'Joined channel {channel_id}')
 
 
-async def send_post(db: Database, post: Post):
-    await db.client.forward_messages(db.neural_networks_channel, post.message)
-    # TODO: add summary in the end of the day
-    # await db.client.send_message(
-    #     db.neural_networks_channel,
-    #     f'Summary of the previous post: {post.brief_information}'
-    # )
+async def send_post(db: Database, post: Post, schedule=None):
+    await db.client.forward_messages(db.neural_networks_channel, post.message, schedule=schedule)
 
 
 async def get_messages(db: Database, channel_name: str, count: int):
@@ -40,24 +35,6 @@ async def get_messages(db: Database, channel_name: str, count: int):
             break
 
     return messages
-
-
-async def send_pending_posts(db: Database):
-    count = len(db.params.pending_posts)
-    if count == 0:
-        return main_logger.info(f"No pending posts.")
-
-    main_logger.info(f"Forward pending posts '{count}'")
-
-    async def send_post_with_waiting(db: Database, post: Post, last: bool, waiting=10):
-        await send_post(db, post)
-        if not last:
-            await asyncio.sleep(waiting)
-
-    for idx, post in enumerate(db.params.pending_posts):
-        await db.asyncio_workers.enqueue_task(send_post_with_waiting, db, post, idx == count - 1)
-
-    db.params.pending_posts.clear()
 
 
 async def large_respond(event: Event, obj: str | List[str], timeout=3, characters=2000, maximum=4):
