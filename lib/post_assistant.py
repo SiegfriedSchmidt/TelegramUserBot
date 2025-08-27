@@ -1,6 +1,7 @@
 from typing import Tuple, Optional, List
 
-from lib.llm import Openrouter, Dialog
+from lib.llms.abstract import LLM
+from lib.llms.dialog import Dialog
 from lib.logger import asis_logger
 from lib.init import llm_post_task_content
 from telethon.tl.custom.message import Message
@@ -30,7 +31,7 @@ class Post:
 
 
 class PostAssistant:
-    def __init__(self, llm_api: Openrouter, stats: Stats):
+    def __init__(self, llm_api: LLM, stats: Stats):
         self.llm_api = llm_api
         self.previous_posts: List[Post] = []
         self.stats = stats

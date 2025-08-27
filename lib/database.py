@@ -1,7 +1,8 @@
 from telethon import TelegramClient
 from lib.asyncio_workers import AsyncioWorkers
 from lib.config_reader import config
-from lib.llm import Openrouter
+from lib.llms.mistral import Mistral
+from lib.llms.openrouter import Openrouter
 from lib.params import Params
 from lib.post_assistant import PostAssistant
 from lib.init import telegram_session_path
@@ -19,7 +20,8 @@ class Database:
         self.params = Params(config.openrouter_api_keys)
         self.stats = Stats()
         self.openrouter = Openrouter(self.params.keys.get_key(), self.asyncio_workers, self.stats)
-        self.post_assistant = PostAssistant(llm_api=self.openrouter, stats=self.stats)
+        self.mistral = Mistral(config.mistral_api_key, self.asyncio_workers, self.stats)
+        self.post_assistant = PostAssistant(llm_api=self.mistral, stats=self.stats)
         self.client = TelegramClient(
             telegram_session_path,
             int(config.telegram_api_id.get_secret_value()),

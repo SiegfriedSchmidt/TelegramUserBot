@@ -2,11 +2,12 @@ import asyncio
 
 from lib.database import Database
 
-from lib.general.filters import Channel, Chat, Command
+from lib.general.filters import Chat, Command
 from lib.general.events import Event
 from lib.general.middleware import CommandMiddleware, AccessMiddleware
 from lib.general.router import Router
-from lib.llm import Dialog
+from lib.llms.dialog import Dialog
+from lib.llms.openrouter import Openrouter
 from lib.logger import log_stream, main_logger
 from lib.init import llm_post_task_content, llm_summary_task
 from lib.utils.telethon_utils import large_respond, get_messages
@@ -55,7 +56,7 @@ async def ask(event: Event, db: Database, arg):
     await event.respond("Question received.")
     main_logger.info(f'/ask {arg}')
 
-    result = await db.openrouter.chat_complete(dialog, attempts=1)
+    result = await db.post_assistant.llm_api.chat_complete(dialog, attempts=1)
     if not result:
         return await event.respond("Nothing.")
 
@@ -67,8 +68,20 @@ async def ask(event: Event, db: Database, arg):
 @router(middlewares=[CommandMiddleware()])
 async def set_model(event: Event, db: Database, arg):
     main_logger.info(f'Set model: {arg}')
-    db.openrouter.model = arg
+    db.post_assistant.llm_api.model = arg
     await event.respond(f'Set model: {arg}')
+
+
+@router()
+async def change_api(event: Event, db: Database):
+    if db.post_assistant.llm_api == db.openrouter:
+        db.post_assistant.llm_api = db.mistral
+        main_logger.info(f'Set api mistral')
+        await event.respond(f'Set api mistral')
+    else:
+        db.post_assistant.llm_api = db.openrouter
+        main_logger.info(f'Set model openrouter')
+        await event.respond(f'Set api openrouter')
 
 
 @router()

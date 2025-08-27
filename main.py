@@ -6,7 +6,7 @@ from apscheduler.triggers.cron import CronTrigger
 from telethon import events
 
 from lib.init import llm_summary_task
-from lib.llm import Dialog
+from lib.llms.dialog import Dialog
 from lib.logger import main_logger
 from lib.database import Database
 from lib.utils.telethon_utils import notify
@@ -47,6 +47,8 @@ async def on_day_end(db: Database):
     dialog.add_user_message(llm_summary_task)
     dialog.add_user_message(f'Previous Posts Information: [{db.post_assistant.get_previous_posts_for_llm()}]')
     result = await db.post_assistant.llm_api.chat_complete(dialog)
+    if not result:
+        result = "Сегодня без сводки по всем постам..."
     await db.client.send_message(db.neural_networks_channel, result + '[сообщение сгенерировано автоматически]')
 
 

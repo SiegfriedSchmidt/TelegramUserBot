@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     telegram_channel: SecretStr
     telegram_admins: List[str]
     openrouter_api_keys: List[SecretStr]
+    mistral_api_key: SecretStr
 
     @classmethod
     def settings_customise_sources(

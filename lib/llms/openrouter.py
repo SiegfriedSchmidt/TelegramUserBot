@@ -4,53 +4,24 @@ import aiohttp
 from pydantic import SecretStr
 
 from lib.asyncio_workers import AsyncioWorkers
+from lib.llms.abstract import LLM
+from lib.llms.dialog import Dialog
 from lib.stats import Stats
-from lib.logger import llm_logger
-from lib.utils.get_exception import get_exception
-
-
-class Dialog:
-    def __init__(self):
-        self.messages = []
-
-    def add_user_message(self, message):
-        self.messages.append({
-            "role": "user",
-            "content": message
-        })
-
-    def add_assistant_message(self, message):
-        self.messages.append({
-            "role": "assistant",
-            "content": message
-        })
-
-    def pop_message(self):
-        self.messages.pop()
-
-    def __str__(self):
-        str_dialog = ''
-        for message in self.messages:
-            str_dialog += f'---{message["role"]}---: {message["content"]}\n'
-        return str_dialog
 
 
 # deepseek/deepseek-r1:free
 # openrouter/cypher-alpha:free
 # deepseek/deepseek-r1-0528:free
-class Openrouter:
+class Openrouter(LLM):
     def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats,
                  model="deepseek/deepseek-r1-0528:free"):
-        self.api_key = api_key.get_secret_value()
-        self.workers = workers
-        self.stats = stats
-        self.model = model
+        super().__init__(api_key, workers, stats, model)
         self.client = AsyncOpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=self.api_key,
         )
 
-    async def __chat_complete(self, dialog: Dialog) -> str:
+    async def _chat_complete(self, dialog: Dialog) -> str:
         self.stats.add_total_requests(1)
         completion = await self.client.chat.completions.create(
             model=self.model,
@@ -58,28 +29,6 @@ class Openrouter:
         )
 
         return completion.choices[0].message.content
-
-    async def __chat_complete_attempts(self, dialog: Dialog, attempts, timeout) -> str:
-        rs = ''
-        for attempt in range(attempts):
-            try:
-                rs = await self.__chat_complete(dialog)
-            except Exception as e:
-                llm_logger.warning(f'Attempt get answer {attempt + 1}/{attempts} failed: {get_exception(e)}')
-                if attempt != attempts - 1:
-                    await asyncio.sleep(timeout)
-                continue
-
-            if rs:
-                break
-            else:
-                llm_logger.warning(f'Attempt get answer {attempt + 1}/{attempts} failed: Get empty response.')
-
-        if not rs:
-            self.stats.add_failed_row_requests(1)
-            llm_logger.error(f'All attempts ({attempts}) have failed!')
-
-        return rs
 
     async def check_limits(self):
         headers = {
@@ -93,19 +42,10 @@ class Openrouter:
                 else:
                     return "Error"
 
-    async def chat_complete(self, dialog: Dialog, attempts=6, timeout=30):
-        result = await self.workers.enqueue_task(self.__chat_complete_attempts, dialog, attempts, timeout)
-        if result:
-            self.stats.add_successful_requests(1)
-        return result
-
-    def __str__(self):
-        return f'model: {self.model}\napi_key: {self.api_key[0:15]}.....{self.api_key[-5:]}\n'
-
 
 if __name__ == '__main__':
-    from config_reader import config
-    from asyncio_workers import AsyncioWorkers
+    from lib.config_reader import config
+    from lib.asyncio_workers import AsyncioWorkers
     from lib.post_assistant import PostAssistant, Post
 
 
