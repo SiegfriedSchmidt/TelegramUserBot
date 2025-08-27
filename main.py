@@ -45,7 +45,7 @@ async def on_day_end(db: Database):
     main_logger.info("Day end function triggered.")
     dialog = Dialog()
     dialog.add_user_message(llm_summary_task)
-    dialog.add_user_message(f'Previous Posts Information: [{db.post_assistant.get_previous_posts_string()}]')
+    dialog.add_user_message(f'Previous Posts Information: [{db.post_assistant.get_previous_posts_for_llm()}]')
     result = await db.post_assistant.llm_api.chat_complete(dialog)
     await db.client.send_message(db.neural_networks_channel, result + '[сообщение сгенерировано автоматически]')
 

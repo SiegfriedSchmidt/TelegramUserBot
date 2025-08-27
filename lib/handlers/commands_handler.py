@@ -8,7 +8,7 @@ from lib.general.middleware import CommandMiddleware, AccessMiddleware
 from lib.general.router import Router
 from lib.llm import Dialog
 from lib.logger import log_stream, main_logger
-from lib.init import llm_post_task_content
+from lib.init import llm_post_task_content, llm_summary_task
 from lib.utils.telethon_utils import large_respond, get_messages
 
 router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
@@ -21,7 +21,7 @@ async def help(event: Event, db: Database):
 
 @router()
 async def previous_posts(event: Event, db: Database):
-    await large_respond(event, f'[{db.post_assistant.get_previous_posts_string()}]')
+    await large_respond(event, f'{db.post_assistant}')
 
 
 @router()
@@ -64,6 +64,13 @@ async def ask(event: Event, db: Database, arg):
     await event.respond(result)
 
 
+@router(middlewares=[CommandMiddleware()])
+async def set_model(event: Event, db: Database, arg):
+    main_logger.info(f'Set model: {arg}')
+    db.openrouter.model = arg
+    await event.respond(f'Set model: {arg}')
+
+
 @router()
 async def posting(event: Event, db: Database):
     db.params.is_posting = not db.params.is_posting
@@ -90,12 +97,14 @@ async def reset_stats(event: Event, db: Database):
 @router()
 async def get_task_prompt(event: Event, db: Database):
     await event.respond(llm_post_task_content)
+    await asyncio.sleep(2)
+    await event.respond(llm_summary_task)
 
 
 @router()
 async def rotate_keys(event: Event, db: Database):
     db.params.keys.rotate_keys()
-    db.openrouter.api_key = db.params.keys.get_key()
+    db.openrouter.api_key = db.params.keys.get_key().get_secret_value()
     await event.respond(f"Current key {db.params.keys.get_key_number()}")
 
 

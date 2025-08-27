@@ -25,6 +25,9 @@ class Post:
         self.successfully_checked = successfully_checked
         self.checked_by_assistant = True
 
+    def __str__(self):
+        return f'Approved: {self.meet_requirements}\nBrief: {self.brief_information}\nReason: {self.reason}'
+
 
 class PostAssistant:
     def __init__(self, llm_api: Openrouter, stats: Stats):
@@ -61,15 +64,18 @@ class PostAssistant:
         else:
             return None
 
-    def get_previous_posts_string(self):
-        return ", ".join(map(lambda x: f'"{x}"', self.previous_posts))
+    def get_previous_posts_for_llm(self):
+        return f'[{", ".join(map(lambda x: x.brief_information, self.previous_posts))}]'
+
+    def __str__(self):
+        return "\n".join(map(lambda x: str(x), self.previous_posts))
 
     async def check_channel_message(self, post: Post, stub_check=False, attempts=3):
         asis_logger.info("Start checking new post message...")
         dialog = Dialog()
         dialog.add_user_message(llm_post_task_content)
         dialog.add_user_message(
-            f'''New Post Content: "{post.message.text}"\nPrevious Posts Information: [{self.get_previous_posts_string()}]'''
+            f'''New Post Content: "{post.message.text}"\nPrevious Posts Information: {self.get_previous_posts_for_llm()}'''
         )
 
         async def try_attempts() -> Optional[Tuple[bool, str, str]]:
