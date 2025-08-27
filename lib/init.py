@@ -29,7 +29,7 @@ Requirements for the New Post:
 Output Instructions:
 Your response must include the following two pieces of information:
 Meet the requirements: A Boolean value ("True" or "False") indicating whether the new post meets all the requirements.
-Brief information: A concise summary or extraction of the key information in the new post that can help identify if similar content appears in future posts.
+Brief information: A concise summary or extraction of the key information in the new post that can help identify if similar content appears in future posts. This part should be short.
 
 Output Format:
 Meet the requirements: "True/False"
@@ -46,7 +46,7 @@ Output Instructions:
 Your response must include the summary of the previous posts key points in russian language.
 
 Output Format:
-just output text of the summary without preface
+Just output text of the summary which ready to be posted in telegram channel as a message.
 '''
 
 test_previous_posts = [

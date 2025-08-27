@@ -37,7 +37,7 @@ def setup_signal_handlers(db: Database):
 
 
 async def on_day_start(db: Database):
-    main_logger.info("Every day function triggered.")
+    main_logger.info("Day start function triggered.")
     db.post_assistant.previous_posts.clear()
 
 

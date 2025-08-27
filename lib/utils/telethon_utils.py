@@ -4,7 +4,7 @@ from lib.database import Database
 from lib.general.events import Event
 from lib.logger import main_logger
 from lib.post_assistant import Post
-from typing import List
+from typing import Iterable
 
 
 async def notify(db: Database, message: str, log=False):
@@ -37,7 +37,7 @@ async def get_messages(db: Database, channel_name: str, count: int):
     return messages
 
 
-async def large_respond(event: Event, obj: str | List[str], timeout=3, characters=2000, maximum=4):
+async def large_respond(event: Event, obj: str | Iterable[str], timeout=3, characters=2000, maximum=4):
     if not obj:
         await event.respond("Nothing.")
     elif isinstance(obj, str):
@@ -46,7 +46,7 @@ async def large_respond(event: Event, obj: str | List[str], timeout=3, character
         for i in range(0, len(obj), characters):
             await event.respond(obj[i:i + characters])
             await asyncio.sleep(timeout)
-    elif isinstance(obj, list):
+    elif isinstance(obj, Iterable):
         divided_message = []
         log = ''
         cnt = 0
@@ -68,3 +68,7 @@ async def large_respond(event: Event, obj: str | List[str], timeout=3, character
         for message in divided_message:
             await event.respond(message)
             await asyncio.sleep(timeout)
+    else:
+        await event.respond("I've get smth else than a str or Iterable.")
+
+    return None
