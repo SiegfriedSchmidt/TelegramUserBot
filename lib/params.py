@@ -1,7 +1,6 @@
 from datetime import time, datetime
 from typing import List
 from pydantic import SecretStr
-from lib.post_assistant import Post
 from collections import deque
 
 

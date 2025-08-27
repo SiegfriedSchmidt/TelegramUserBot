@@ -39,7 +39,8 @@ class Dialog:
 # openrouter/cypher-alpha:free
 # deepseek/deepseek-r1-0528:free
 class Openrouter:
-    def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats, model="deepseek/deepseek-r1-0528:free"):
+    def __init__(self, api_key: SecretStr, workers: AsyncioWorkers, stats: Stats,
+                 model="deepseek/deepseek-r1-0528:free"):
         self.api_key = api_key.get_secret_value()
         self.workers = workers
         self.stats = stats
@@ -103,29 +104,45 @@ class Openrouter:
 
 
 if __name__ == '__main__':
-    # from config_reader import config
-    # from asyncio_workers import AsyncioWorkers
-    # from lib.post_assistant import PostAssistant, Post
-    #
-    #
-    # async def main():
-    #     workers = AsyncioWorkers()
-    #     stats = Stats()
-    #     openrouter = Openrouter(config.openrouter_api_key.get_secret_value(), workers, stats)
-    #     print(await openrouter.check_limits())
-    #     post_assistant = PostAssistant(llm_api=openrouter)
-    #     await openrouter.workers.start(1)
+    from config_reader import config
+    from asyncio_workers import AsyncioWorkers
+    from lib.post_assistant import PostAssistant, Post
 
-    #     post = Post('''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.
-    #
-    # • Пишем нужный промпт
-    # • Выбираем стиль и качество (стандарт/высокое)
-    # • Скачиваем ГОТОВОЕ лого в нужном формате
-    #
-    # Фрилансеры уже потирают ручки ''')
-    #     await post_assistant.check_channel_message(post)
 
-    #     print(llm_task_content)
+    async def main():
+        workers = AsyncioWorkers()
+        stats = Stats()
+        openrouter = Openrouter(config.openrouter_api_keys[0], workers, stats)
+        print(await openrouter.check_limits())
+        post_assistant = PostAssistant(llm_api=openrouter, stats=stats)
+        await openrouter.workers.start(1)
+
+        class StubMessage:
+            def __init__(self, text):
+                self.text = text
+
+        message = StubMessage('''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.
+
+    • Пишем нужный промпт
+    • Выбираем стиль и качество (стандарт/высокое)
+    • Скачиваем ГОТОВОЕ лого в нужном формате
+
+    Фрилансеры уже потирают ручки ''')
+        post = Post(message)
+        await post_assistant.check_channel_message(post)
+        print('-----')
+        print(post.successfully_checked)
+        print('-----')
+        print(post.checked_by_assistant)
+        print('-----')
+        print(post.meet_requirements)
+        print('-----')
+        print(post.brief_information)
+        print('-----')
+
+
+    asyncio.run(main())
+
     #
     #     await asyncio.gather(*[post_assistant.check_channel_message(
     #         '''Создаём любой логотип: вышел удобный БЕСПЛАТНЫЙ генератор лого AppyPie.

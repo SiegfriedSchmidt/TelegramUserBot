@@ -30,10 +30,12 @@ Output Instructions:
 Your response must include the following two pieces of information:
 Meet the requirements: A Boolean value ("True" or "False") indicating whether the new post meets all the requirements.
 Brief information: A concise summary or extraction of the key information in the new post that can help identify if similar content appears in future posts. This part should be short.
+Reason: An explanation why this post meet the requirement or not. You can leave it blank.
 
 Output Format:
 Meet the requirements: "True/False"
 Brief information: "brief info about post"
+Reason: "explanation about "meet the requirements" choice or blank"
 '''
 
 llm_summary_task = '''Task:

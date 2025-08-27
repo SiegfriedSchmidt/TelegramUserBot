@@ -48,7 +48,7 @@ class PlainFormatter(logging.Formatter):
 
 class LogStream:
     def __init__(self):
-        self.logs: deque[str] = deque(maxlen=200)
+        self.logs: deque[str] = deque(maxlen=100)
 
     def write(self, string: str):
         if string.strip():
