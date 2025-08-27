@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from lib.database import Database
 from lib.general.filters import Channel
 from lib.general.events import Event
@@ -36,8 +38,12 @@ async def my_event_handler(event: Event, db: Database):
             main_logger.info(f"Brief info: {post.brief_information}, meet_requirements: {post.meet_requirements}")
             if post.meet_requirements:
                 if not db.params.is_night_posting and is_night(db):
-                    main_logger.info(f"Send scheduled message because of night.")
-                    await send_post(db, post, next_datetime_from_time(db.params.night_interval[1]))
+                    hours_offset = -3
+                    schedule = next_datetime_from_time(db.params.night_interval[1])
+                    main_logger.info(
+                        f"Send scheduled message because of night. ({schedule}, {hours_offset} hours offset)"
+                    )
+                    await send_post(db, post, schedule + timedelta(hours=hours_offset))
                 else:
                     main_logger.info(f"Send message now.")
                     await send_post(db, post)

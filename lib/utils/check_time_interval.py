@@ -27,3 +27,9 @@ def next_datetime_from_time(target_time: time) -> datetime:
         candidate += timedelta(days=1)
 
     return candidate
+
+
+if __name__ == '__main__':
+    night_interval = (time(23, 0), time(10, 0))
+    schedule = next_datetime_from_time(night_interval[1])
+    print(schedule, type(schedule))

@@ -30,6 +30,6 @@ class AccessMiddleware(Middleware):
         username = (await event.get_chat()).username
         if username not in [*self.usernames, *db.admins]:
             main_logger.warning(f"From user '{username}' message '{event.message.text}'")
-            await event.respond('Nicht würdig')
+            await event.respond('Nicht würdig!')
             return False, {}
         return True, {}

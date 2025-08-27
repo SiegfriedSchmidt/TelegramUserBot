@@ -54,7 +54,7 @@ async def large_respond(event: Event, obj: str | Iterable[str], timeout=3, chara
             cnt += len(item)
             if cnt >= characters:
                 divided_message.append(log)
-                log = item
+                log = ''
                 cnt = len(item)
 
             log += item

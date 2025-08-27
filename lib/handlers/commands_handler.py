@@ -1,4 +1,6 @@
 import asyncio
+import datetime
+from datetime import time
 
 from lib.database import Database
 
@@ -7,9 +9,9 @@ from lib.general.events import Event
 from lib.general.middleware import CommandMiddleware, AccessMiddleware
 from lib.general.router import Router
 from lib.llms.dialog import Dialog
-from lib.llms.openrouter import Openrouter
 from lib.logger import log_stream, main_logger
 from lib.init import llm_post_task_content, llm_summary_task
+from lib.utils.check_time_interval import next_datetime_from_time
 from lib.utils.telethon_utils import large_respond, get_messages
 
 router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
@@ -18,6 +20,11 @@ router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
 @router()
 async def help(event: Event, db: Database):
     await event.respond(', '.join(map(lambda r: '/' + r.name, router.handlers[:-2])))
+
+
+@router()
+async def test(event: Event, db: Database):
+    await event.respond('scheduled', schedule=datetime.datetime(2025, 8, 29, 19, 0) + datetime.timedelta(hours=-3))
 
 
 @router()

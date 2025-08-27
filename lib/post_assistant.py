@@ -105,10 +105,10 @@ class PostAssistant:
         self.stats.add_total_posts(1)
         if rs:
             meet_requirements, brief_information, reason = rs
+            post.fill_info(meet_requirements, brief_information, reason, True)
             if meet_requirements:
                 self.stats.add_chosen_posts(1)
-
-            post.fill_info(meet_requirements, brief_information, reason, True)
+                self.previous_posts.append(post)
 
 
 if __name__ == '__main__':

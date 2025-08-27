@@ -38,7 +38,6 @@ def setup_signal_handlers(db: Database):
 
 async def on_day_start(db: Database):
     main_logger.info("Day start function triggered.")
-    db.post_assistant.previous_posts.clear()
 
 
 async def on_day_end(db: Database):
@@ -50,6 +49,7 @@ async def on_day_end(db: Database):
     if not result:
         result = "Сегодня без сводки по всем постам..."
     await db.client.send_message(db.neural_networks_channel, result + '[сообщение сгенерировано автоматически]')
+    db.post_assistant.previous_posts.clear()
 
 
 async def main():
