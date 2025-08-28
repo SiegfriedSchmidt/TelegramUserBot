@@ -35,7 +35,9 @@ async def my_event_handler(event: Event, db: Database):
         if not post.successfully_checked:
             main_logger.error(f"Post assistant failed accomplish task.")
         else:
-            main_logger.info(f"Brief info: {post.brief_information}, meet_requirements: {post.meet_requirements}")
+            main_logger.info(
+                f"Meet requirements: {post.meet_requirements}\nBrief info: {post.brief_information}\nReason: {post.reason}"
+            )
             if post.meet_requirements:
                 if not db.params.is_night_posting and is_night(db):
                     hours_offset = -3

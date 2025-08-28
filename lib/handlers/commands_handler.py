@@ -10,9 +10,11 @@ from lib.general.middleware import CommandMiddleware, AccessMiddleware
 from lib.general.router import Router
 from lib.llms.dialog import Dialog
 from lib.logger import log_stream, main_logger
-from lib.init import llm_post_task_content, llm_summary_task
+from lib.init import llm_post_task_content, llm_summary_task, app_data_folder_path
+from lib.post_assistant import Post
 from lib.utils.check_time_interval import next_datetime_from_time
 from lib.utils.telethon_utils import large_respond, get_messages
+from lib.utils.utils import get_file_from_str, save_with_attributes, load_with_attributes
 
 router = Router(lambda: Chat() & Command(), [AccessMiddleware()])
 
@@ -24,12 +26,44 @@ async def help(event: Event, db: Database):
 
 @router()
 async def test(event: Event, db: Database):
-    await event.respond('scheduled', schedule=datetime.datetime(2025, 8, 29, 19, 0) + datetime.timedelta(hours=-3))
+    class StubMessage:
+        def __init__(self, text):
+            self.text = text
+
+    post = Post(StubMessage('test post'), True, 'BRIEF1', "REASON")
+    db.post_assistant.previous_posts.append(post)
+    post = Post(StubMessage('test post2'), False, 'BRIEF2', "REASON")
+    db.post_assistant.previous_posts.append(post)
+
+    # await event.respond('scheduled', schedule=datetime.datetime(2025, 8, 29, 19, 0) + datetime.timedelta(hours=-3))
 
 
 @router()
 async def previous_posts(event: Event, db: Database):
-    await large_respond(event, f'{db.post_assistant}')
+    if not await large_respond(event, str(db.post_assistant)):
+        await event.respond(file=get_file_from_str(str(db.post_assistant), 'previous_posts.txt'))
+
+
+@router()
+async def previous_posts_for_llm(event: Event, db: Database):
+    await large_respond(event, db.post_assistant.get_previous_posts_for_llm())
+
+
+@router()
+async def save_previous_posts_to_file(event: Event, db: Database):
+    filepath = app_data_folder_path / 'previous_posts.json'
+    save_with_attributes(db.post_assistant.previous_posts, filepath)
+    main_logger.info(f"Saved previous posts to file {filepath}")
+    await event.respond(f"Saved previous posts to file {filepath}")
+
+
+@router()
+async def retrieve_previous_posts_from_file(event: Event, db: Database):
+    filepath = app_data_folder_path / 'previous_posts.json'
+    data = load_with_attributes(filepath, Post)
+    db.post_assistant.previous_posts.extend(data)
+    main_logger.info(f"Retrieve previous posts to file {filepath}")
+    await event.respond(f"Retrieve previous posts to file {filepath}")
 
 
 @router()
@@ -48,7 +82,8 @@ async def logs_file(event: Event, db: Database):
 
 @router()
 async def logs(event: Event, db: Database):
-    await large_respond(event, log_stream.logs)
+    if not await large_respond(event, log_stream.logs):
+        await logs_file(event, db)
 
 
 @router()

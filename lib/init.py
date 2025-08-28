@@ -9,6 +9,7 @@ if str(secret_folder_path) == '.':
         secret_folder_path = secret_folder_path.parent
     secret_folder_path = secret_folder_path / 'secret'
 
+app_data_folder_path = secret_folder_path / '../app_data'
 telegram_session_path = secret_folder_path / 'telegram_user.session'
 
 llm_post_task_content = '''Task:

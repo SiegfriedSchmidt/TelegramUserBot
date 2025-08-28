@@ -6,6 +6,8 @@ from collections import deque
 import logging
 import sys
 
+from lib.utils.utils import get_file_from_str
+
 
 class COLORS:
     DEBUG = Fore.LIGHTGREEN_EX
@@ -58,9 +60,7 @@ class LogStream:
         pass
 
     def get_file(self) -> BytesIO:
-        file = BytesIO(str(self).encode("utf-8"))
-        file.name = 'logs.txt'
-        return file
+        return get_file_from_str(str(self), 'logs.txt')
 
     def __str__(self):
         return "".join(self.logs)

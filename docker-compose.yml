@@ -8,6 +8,7 @@ services:
       - SECRET_FOLDER=/app/secret
       - TZ=Europe/Moscow
     volumes:
-      - ./secret:/app/secret
+      - ./secret:/app/secret:ro
+      - ./app_data:/app_data
 
     restart: "no"

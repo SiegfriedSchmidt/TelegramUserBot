@@ -37,12 +37,14 @@ async def get_messages(db: Database, channel_name: str, count: int):
     return messages
 
 
-async def large_respond(event: Event, obj: str | Iterable[str], timeout=3, characters=2000, maximum=4):
+async def large_respond(event: Event, obj: str | Iterable[str], timeout=3, characters=2000, maximum=4) -> bool:
     if not obj:
         await event.respond("Nothing.")
+        return True
     elif isinstance(obj, str):
         if len(obj) >= characters * 4:
-            return await event.respond("Too large.")
+            await event.respond("Too large.")
+            return False
         for i in range(0, len(obj), characters):
             await event.respond(obj[i:i + characters])
             await asyncio.sleep(timeout)
@@ -63,7 +65,8 @@ async def large_respond(event: Event, obj: str | Iterable[str], timeout=3, chara
             divided_message.append(log)
 
         if len(divided_message) >= maximum:
-            return await event.respond("Too large.")
+            await event.respond("Too large.")
+            return False
 
         for message in divided_message:
             await event.respond(message)
@@ -71,4 +74,4 @@ async def large_respond(event: Event, obj: str | Iterable[str], timeout=3, chara
     else:
         await event.respond("I've get smth else than a str or Iterable.")
 
-    return None
+    return True

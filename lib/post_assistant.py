@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict, Any
 
 from lib.llms.abstract import LLM
 from lib.llms.dialog import Dialog
@@ -11,7 +11,7 @@ from lib.stats import Stats
 
 
 class Post:
-    def __init__(self, message: Message, meet_requirements='', brief_information='', reason=''):
+    def __init__(self, message: Optional[Message], meet_requirements='', brief_information='', reason=''):
         self.message = message
         self.meet_requirements = meet_requirements
         self.brief_information = brief_information
@@ -27,7 +27,18 @@ class Post:
         self.checked_by_assistant = True
 
     def __str__(self):
-        return f'Approved: {self.meet_requirements}\nBrief: {self.brief_information}\nReason: {self.reason}'
+        return f'Approved: {self.meet_requirements}\nBrief: {self.brief_information}\nReason: {self.reason}\n'
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'meet_requirements': self.meet_requirements,
+            'brief_information': self.brief_information,
+            'reason': self.reason,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Post':
+        return cls(None, data['meet_requirements'], data['brief_information'], data['reason'])
 
 
 class PostAssistant:
@@ -66,12 +77,15 @@ class PostAssistant:
             return None
 
     def get_previous_posts_for_llm(self):
-        return f'[{", ".join(map(lambda x: x.brief_information, self.previous_posts))}]'
+        return f'[{", ".join(map(lambda x: x.brief_information, filter(lambda p: p.meet_requirements, self.previous_posts)))}]'
 
     def __str__(self):
         return "\n".join(map(lambda x: str(x), self.previous_posts))
 
     async def check_channel_message(self, post: Post, stub_check=False, attempts=3):
+        if not post.message:
+            return asis_logger.error("There is no message!")
+
         asis_logger.info("Start checking new post message...")
         dialog = Dialog()
         dialog.add_user_message(llm_post_task_content)
@@ -106,9 +120,9 @@ class PostAssistant:
         if rs:
             meet_requirements, brief_information, reason = rs
             post.fill_info(meet_requirements, brief_information, reason, True)
+            self.previous_posts.append(post)
             if meet_requirements:
                 self.stats.add_chosen_posts(1)
-                self.previous_posts.append(post)
 
 
 if __name__ == '__main__':

@@ -9,4 +9,5 @@ tests
 test
 secret
 secrets
+app_data
 database.sqlite
